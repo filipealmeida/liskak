@@ -1,0 +1,41 @@
+{
+  "name": "liskak",
+  "version": "0.0.1",
+  "description": "Lisk Army Knife, command line lisk and forge failover",
+  "main": "liskak.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lisk",
+    "monitor",
+    "operations",
+    "control",
+    "failover",
+    "high-availability",
+    "bip39",
+    "failover",
+    "balance",
+    "account",
+    "vote",
+    "autovote",
+    "donate"
+  ],
+  "author": "the pope",
+  "license": "PDDL-1.0",
+  "dependencies": {
+    "bitcore-mnemonic": "^1.1.1",
+    "fs": "0.0.2",
+    "http": "0.0.0",
+    "https": "^1.0.0",
+    "process": "^0.11.3",
+    "q": "^1.4.1",
+    "querystring": "^0.2.0",
+    "stdio": "^0.2.7",
+    "url": "^0.11.0",
+    "winston": "^2.2.0"
+  }
+}
