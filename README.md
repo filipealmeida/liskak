@@ -36,6 +36,11 @@ Then, download the master from github and:
 4. npm install
 5. ./liskak.sh --help
 
+##
+NOTICE: on windows, use "liskak.bat" instead of "liskak.sh" to run Lisk Army Knife.
+
+You can always run issuing "node src/liskak.js ARGS"
+
 # Available options:
 ```
 someuser@foo:~/liskak$ ./liskak.sh --help
