@@ -33,7 +33,8 @@ Then, download the master from github and:
 1. unzip liskak-master.zip
 2. # Configure the file liskak.json in the liskak-master/src folder to reflect your account
 3. cd liskak-master
-4. ./liskak.sh --help
+4. npm install
+5. ./liskak.sh --help
 
 # Available options:
 ```
