@@ -15,7 +15,7 @@ They wanted to have their lisk delegate nodes monitored, healthy and having at l
 The following script insued.
 
 # DISCLAIMER
-This script is in need of many tests, assertions and input sanitization are missing.
+This script is immature and in need of many tests.
 
 Nonetheless, since it proved it's worth and is allegedly usefull for the lisk community, here it is.
 
@@ -68,6 +68,7 @@ The following options are supported:
   -s, --donate <ARG1>                 	Donate LSK to this great cause, default: 5
   -t, --transfer <ARG1> <ARG2>        	Transfer LSK to an address from your configured account: -t LSK ADDRESS
   -T, --lsktransfer <ARG1> <ARG2>		Transfer LSK^8 to an address from your configured account: -t LSK ADDRESS
+  -S, --supervise <ARG1>                Provide lisk path to manage lisk process locally (handles fork3, etc.),
   -f, --failoverMonkey <ARG1>...<ARGN>	Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
   -P, --pollingInterval <ARG1>        	Interval between node polling in milliseconds ("10000" by default)
   -F, --maxFailures <ARG1>            	Maximum failures tolerated when chatting with lisk nodes ("10" by default)
@@ -99,6 +100,25 @@ someuser@foo:~/liskak$ ./liskak.sh -f https://NODE1:8001 https://NODE2:8001
 2016-05-28T11:27:51.558Z INFO https://node1:8001/ has forging DISABLED
 ......
 ```
+
+### Supervision of node and automatic restarts/reloads
+Currently only coldstart will occur in the event of a fork cause: 3.
+
+Please advise on which rules should be implemented.
+
+Example:
+
+```
+someuser@foo:~/liskak$ ./liskak.sh -S /opt/lisk
+2016-06-03T17:09:37.562Z INFO Initializing
+2016-06-03T17:09:37.593Z INFO Looking at the lisk log file "/opt/lisk/app.log"
+2016-06-03T17:09:37.594Z INFO Lisk shell script found: /opt/lisk/lisk.sh
+2016-06-03T17:09:37.631Z INFO Tailing /opt/lisk/app.log
+2016-06-03T17:11:45.103Z ERROR Node has forked with cause: 3, issuing coldstart
+2016-06-03T17:11:45.109Z WARN Performing "bash lisk.sh coldstart"
+2016-06-03T17:11:45.117Z WARN Action "coldstart" ignored; nothing will take action in the next 59.997 seconds due to cooldown from last action.
+```
+WARNING: this surelly won't work in windows; please donate to buy a copy :)
 
 ### New account
 If executed with the -N flag, Lisk Army Knife will produce a new key for you which you can use as an account.

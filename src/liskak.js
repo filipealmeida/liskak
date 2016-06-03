@@ -14,6 +14,7 @@ var url = require('url');
 var Q = require('q');
 var winston = require('winston');
 var querystring = require('querystring');
+var tail = require('tail').Tail;
 var delegateList = [];
 var delegateCompare = {};
 var delegateAdd = [];
@@ -41,6 +42,7 @@ var options = stdio.getopt({
 	'transfer': {         key: 't', args: 2, description: 'Transfer LSK to an address from your configured account: -t LSK ADDRESS' },
 	'lsktransfer': {      key: 'T', args: 2, description: 'Transfer LSK^8 to an address from your configured account: -t LSK ADDRESS' },
 	'failoverMonkey': {   key: 'f', args: '*', description: 'Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures'},
+	'supervise': {        key: 'S', args: 1, description: 'Provide lisk path to manage lisk process locally (handles fork3, etc.)'},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
 	'maxBlocksDelayed': { key: 'D', args: 1, description: 'Maximum number of block difference between nodes before change forging node', default: NODE_MAX_BLOCK_DELAY}
@@ -287,7 +289,7 @@ var liskak = function(_config, _options) {
 				});
 			};	
 		} else {
-			logger.error(`Could not add response request to the runtime configuration: ${data}`);
+			logger.error(`Could not add response request to the runtime configuration:`, data);
 		}
 	}
 
@@ -584,6 +586,7 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 												var delta = futureVotes - negativeVotes - LISK_MAX_VOTES;
 												console.log(`You will need to remove ${delta} delegates from your list (run me with the "-l" flag)`);
 											} else {
+												//TODO: try to chain instead of parallel
 												if (options.commitVotes) {
 													var currentBallots = 0;
 													var clist = [];
@@ -691,6 +694,102 @@ if (options.balance) {
 |_|  \___/|_|  \__, |_|_| |_|\__, | |_|  \__,_|_|_|\___/ \_/ \___|_|   
                |___/         |___/                                   
 */
+
+/*
+info 2016-06-03 10:42:29 Fork { delegate: '2be0301710d1295f9afeba6c469f7447e6915e3e63fcbdd69c3fa54a50184803',
+  block:
+   { id: '8858035861396450314',
+     timestamp: 806330,
+     height: 73339,
+     previousBlock: '6808414619110397701' },
+  cause: 3 }
+*/
+if (options.supervise) {
+	var exec = require('child_process').exec;
+	function puts(error, stdout, stderr) { sys.puts(stdout) }
+
+	var logfile = undefined;
+	var lisksh = undefined;
+	var sep = "/";
+	if (fs.existsSync(options.supervise  + "/app.log", fs.F_OK)) {
+		logger.info(`Looking at the lisk log file "${options.supervise}/app.log"`);
+		logfile = options.supervise  + "/app.log";
+	} else if (fs.existsSync(options.supervise  + "\\app.log", fs.F_OK)) {
+		logger.info(`Looking at the lisk log file "${options.supervise}\\app.log"`);
+		sep = "\\";
+		logfile = options.supervise  + "\\app.log";
+	} else {
+		logger.error(`"${options.supervise}" is not a valid lisk path (no app.log found)`);
+		sys.exit(10);
+	}
+
+	if (fs.existsSync(options.supervise  + sep + "lisk.sh", fs.F_OK)) {
+		lisksh = options.supervise  + sep + "lisk.sh";
+		logger.info(`Lisk shell script found: ${options.supervise  + sep + "lisk.sh"}`);
+	} else {
+		logger.warn("Lisk shell script (lisk.sh) not found in the path provided after -S. Restarts will not occur!");
+	}
+
+	if (logfile !== undefined) {
+		try {
+			var t = new tail(logfile, { fromBeginning: false, follow: true, logger: logger});
+		} catch (e) {
+			logger.error(e);
+		}
+
+		logger.info(`Tailing ${logfile}`);
+		var message = "";
+		var verb = "";
+		var canAct = 0;
+		var action = undefined;
+		t.on("line", function(data) {
+			var matches;
+			if (matches = data.replace(/(\n|\r)+$/, '').match(/^(\w+) (\d+-\d+-\d+) (\d+:\d+:\d+) (\w+) (.*)/)) {
+				if (message !== "") {
+					switch (verb) {
+						case "Fork":
+							try {
+								message = message.replace(/(\w+):/g, "\"\$1\":").replace(/'/g, '"');
+								var json = JSON.parse(message);
+								if (json.cause == 3) {
+									logger.error("Node has forked with cause: 3, issuing coldstart");
+									action = "coldstart";
+								} else {
+									logger.warn("Some fork happened, but not cause 3, ignoring.", json);
+								}
+							} catch (e) {
+								logger.error("Failed to parse fork message:", e);
+							}
+							break;
+						default:
+					}
+				}
+				verb = matches[4];
+				message = matches[5];
+			} else {
+				message += data;
+			}
+
+			if (action !== undefined) {
+				if ((new Date()).getTime() > canAct) {
+					//issue action
+					switch (action) {
+						case "coldstart":
+							logger.warn("Performing \"bash lisk.sh coldstart\"");
+							exec("cd "+ options.supervise +" && bash lisk.sh coldstart", puts);
+							break;
+					}
+					action = undefined;
+					canAct = (new Date()).getTime() + 60*1000;//block further executions in the next minute
+				} else {
+					logger.warn(`Action "${action}" ignored; nothing will take action in the next ${(canAct - (new Date()).getTime()) / 1000} seconds due to cooldown from last action.`)
+				}
+			}
+		});
+	}
+}
+
+
 if ((options.failoverMonkey) && (options.failoverMonkey.constructor === String)) {
 	options.failoverMonkey = [options.failoverMonkey];
 }
