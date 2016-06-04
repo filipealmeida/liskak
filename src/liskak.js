@@ -752,8 +752,8 @@ if (options.supervise) {
 								message = message.replace(/(\w+):/g, "\"\$1\":").replace(/'/g, '"');
 								var json = JSON.parse(message);
 								if (json.cause == 3) {
-									logger.error("Node has forked with cause: 3, issuing coldstart");
-									action = "coldstart";
+									logger.error("Node has forked with cause: 3, issuing rebuild");
+									action = "rebuild";
 								} else {
 									logger.warn("Some fork happened, but not cause 3, ignoring.", json);
 								}
@@ -774,9 +774,9 @@ if (options.supervise) {
 				if ((new Date()).getTime() > canAct) {
 					//issue action
 					switch (action) {
-						case "coldstart":
-							logger.warn("Performing \"bash lisk.sh coldstart\"");
-							exec("cd "+ options.supervise +" && bash lisk.sh coldstart", puts);
+						case "rebuild":
+							logger.warn("Performing \"bash lisk.sh rebuild\"");
+							exec("cd "+ options.supervise +" && bash lisk.sh rebuild", puts);
 							break;
 					}
 					action = undefined;
