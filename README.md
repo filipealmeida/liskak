@@ -102,7 +102,7 @@ someuser@foo:~/liskak$ ./liskak.sh -f https://NODE1:8001 https://NODE2:8001
 ```
 
 ### Supervision of node and automatic restarts/reloads
-Currently only coldstart will occur in the event of a fork cause: 3.
+Currently only rebuild will occur in the event of a fork cause: 3.
 
 Please advise on which rules should be implemented.
 
@@ -114,9 +114,8 @@ someuser@foo:~/liskak$ ./liskak.sh -S /opt/lisk
 2016-06-03T17:09:37.593Z INFO Looking at the lisk log file "/opt/lisk/app.log"
 2016-06-03T17:09:37.594Z INFO Lisk shell script found: /opt/lisk/lisk.sh
 2016-06-03T17:09:37.631Z INFO Tailing /opt/lisk/app.log
-2016-06-03T17:11:45.103Z ERROR Node has forked with cause: 3, issuing coldstart
-2016-06-03T17:11:45.109Z WARN Performing "bash lisk.sh coldstart"
-2016-06-03T17:11:45.117Z WARN Action "coldstart" ignored; nothing will take action in the next 59.997 seconds due to cooldown from last action.
+2016-06-03T17:11:45.103Z ERROR Node has forked with cause: 3, issuing rebuild
+2016-06-03T17:11:45.109Z WARN Performing "bash lisk.sh rebuild"
 ```
 WARNING: this surelly won't work in windows; please donate to buy a copy :)
 
