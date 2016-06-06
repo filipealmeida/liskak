@@ -731,7 +731,7 @@ if (options.supervise) {
 	}
 
 	if (logfile !== undefined) {
-		try {
+		try {	
 			var t = new tail(logfile, { fromBeginning: false, follow: true, logger: logger});
 		} catch (e) {
 			logger.error(e);
@@ -789,7 +789,7 @@ if (options.supervise) {
 					//issue action
 					switch (action) {
 						default:
-							logger.warn(`Performing "bash lisk.sh " + ${action}`);
+							logger.warn(`Performing "bash lisk.sh ${action}"`);
 							exec("cd "+ options.supervise +" && bash lisk.sh " + action, (err, stdout, stderr) => {
 								if (err) {
 									logger.error(err);
