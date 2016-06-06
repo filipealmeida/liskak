@@ -732,7 +732,7 @@ if (options.supervise) {
 
 	if (logfile !== undefined) {
 		try {
-			var t = new tail(logfile, { fromBeginning: true, follow: true, logger: logger});
+			var t = new tail(logfile, { fromBeginning: false, follow: true, logger: logger});
 		} catch (e) {
 			logger.error(e);
 		}
