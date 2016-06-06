@@ -732,7 +732,7 @@ if (options.supervise) {
 
 	if (logfile !== undefined) {
 		try {
-			var t = new tail(logfile, { fromBeginning: false, follow: true, logger: logger});
+			var t = new tail(logfile, { fromBeginning: true, follow: true, logger: logger});
 		} catch (e) {
 			logger.error(e);
 		}
@@ -742,6 +742,8 @@ if (options.supervise) {
 		var verb = "";
 		var canAct = 0;
 		var action = undefined;
+		//TODO: check tail of message string, parse of message requires revision
+		//TODO: only acts after a new match, revision to speed up log message recog
 		t.on("line", function(data) {
 			var matches;
 			if (matches = data.replace(/(\n|\r)+$/, '').match(/^(\w+) (\d+-\d+-\d+) (\d+:\d+:\d+) (\w+) (.*)/)) {
@@ -765,10 +767,11 @@ if (options.supervise) {
 										action = "rebuild";
 										break;
 									default:
-										logger.warn("Some fork happened, but not cause 3, ignoring.", json);
+										logger.warn("Some fork happened, but not cause [1-3], ignoring.", json);
+										action = undefined;
 								}
 							} catch (e) {
-								logger.error("Failed to parse fork message:", e);
+								logger.error("Failed to parse fork message:", e, message);
 							}
 							break;
 						default:
@@ -785,18 +788,23 @@ if (options.supervise) {
 				if ((new Date()).getTime() > canAct) {
 					//issue action
 					switch (action) {
-						case "rebuild":
-							logger.warn("Performing \"bash lisk.sh rebuild\"");
-							exec("cd "+ options.supervise +" && bash lisk.sh rebuild", puts);
-							break;
 						default:
-							exec("cd "+ options.supervise +" && bash lisk.sh " + action, puts);
+							logger.warn(`Performing "bash lisk.sh " + ${action}`);
+							exec("cd "+ options.supervise +" && bash lisk.sh " + action, (err, stdout, stderr) => {
+								if (err) {
+									logger.error(err);
+									return;
+								}
+								logger.info(stdout);
+							});
 					}
-					action = undefined;
+					message = "";
 					canAct = (new Date()).getTime() + 60*1000;//block further executions in the next minute
 				} else {
 					logger.warn(`Action "${action}" ignored; nothing will take action in the next ${(canAct - (new Date()).getTime()) / 1000} seconds due to cooldown from last action.`)
+					logger.warn(`== ${message}`);
 				}
+				action = undefined;
 			}
 		});
 	}
