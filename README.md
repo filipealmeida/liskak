@@ -68,7 +68,7 @@ The following options are supported:
   -s, --donate <ARG1>                 	Donate LSK to this great cause, default: 5
   -t, --transfer <ARG1> <ARG2>        	Transfer LSK to an address from your configured account: -t LSK ADDRESS
   -T, --lsktransfer <ARG1> <ARG2>		Transfer LSK^8 to an address from your configured account: -t LSK ADDRESS
-  -S, --supervise <ARG1>                Provide lisk path to manage lisk process locally (handles fork3, etc.),
+  -S, --supervise <ARG1>                Provide lisk path to manage lisk process locally (handles forks, etc.),
   -f, --failoverMonkey <ARG1>...<ARGN>	Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
   -P, --pollingInterval <ARG1>        	Interval between node polling in milliseconds ("10000" by default)
   -F, --maxFailures <ARG1>            	Maximum failures tolerated when chatting with lisk nodes ("10" by default)
@@ -102,9 +102,11 @@ someuser@foo:~/liskak$ ./liskak.sh -f https://NODE1:8001 https://NODE2:8001
 ```
 
 ### Supervision of node and automatic restarts/reloads
-Currently only rebuild will occur in the event of a fork cause: 3.
+1. Fork 1: issues rebuild but requires work to do this only if you forged the last block (please open an issue with loglines such as this so it can be corrected)
+2. Fork 2: issues a lisk restart
+3. Fork 3: issues a rebuild 
 
-Please advise on which rules should be implemented.
+Please advise for further rules by opening an issue.
 
 Example:
 

@@ -751,17 +751,28 @@ if (options.supervise) {
 							try {
 								message = message.replace(/(\w+):/g, "\"\$1\":").replace(/'/g, '"');
 								var json = JSON.parse(message);
-								if (json.cause == 3) {
-									logger.error("Node has forked with cause: 3, issuing rebuild");
-									action = "rebuild";
-								} else {
-									logger.warn("Some fork happened, but not cause 3, ignoring.", json);
+								switch (json.cause) {
+									case 1:
+										logger.error("Node has forked with cause: 1, issuing rebuild");
+										action = "rebuild";
+										break;
+									case 2:
+										logger.error("Node has forked with cause: 2, issuing restart");
+										action = "restart";
+										break;
+									case 3:
+										logger.error("Node has forked with cause: 3, issuing rebuild");
+										action = "rebuild";
+										break;
+									default:
+										logger.warn("Some fork happened, but not cause 3, ignoring.", json);
 								}
 							} catch (e) {
 								logger.error("Failed to parse fork message:", e);
 							}
 							break;
 						default:
+							action = undefined;
 					}
 				}
 				verb = matches[4];
@@ -778,6 +789,8 @@ if (options.supervise) {
 							logger.warn("Performing \"bash lisk.sh rebuild\"");
 							exec("cd "+ options.supervise +" && bash lisk.sh rebuild", puts);
 							break;
+						default:
+							exec("cd "+ options.supervise +" && bash lisk.sh " + action, puts);
 					}
 					action = undefined;
 					canAct = (new Date()).getTime() + 60*1000;//block further executions in the next minute
