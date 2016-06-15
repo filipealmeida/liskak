@@ -439,14 +439,16 @@ var liskak = function(_config, _options) {
 if (fs.existsSync(options.upvote, fs.F_OK)) {
 	logger.info(`Loading upvotes from ${options.upvote}`);
 	var contents = fs.readFileSync(options.upvote).toString();
+	var dcount = 0;
 	delegateList = contents.split("\n");
-	if (delegateList.length > LISK_MAX_VOTES) {
-		logger.error(`You have more than ${LISK_MAX_VOTES} delegates in your list (${delegateList.length})`);
-	}
 	for (var i = 0; i < delegateList.length; i++) {
 		if (delegateList[i] !== "") {
 			delegateCompare[delegateList[i]] = 1;
+			dcount++;
 		}
+	}
+	if (dcount > LISK_MAX_VOTES) {
+		logger.error(`You have more than ${LISK_MAX_VOTES} delegates in your list (${delegateList.length})`);
 	}
 }
 
@@ -802,7 +804,7 @@ if (options.supervise) {
 					canAct = (new Date()).getTime() + 60*1000;//block further executions in the next minute
 				} else {
 					logger.warn(`Action "${action}" ignored; nothing will take action in the next ${(canAct - (new Date()).getTime()) / 1000} seconds due to cooldown from last action.`)
-					logger.warn(`== ${message}`);
+					logger.debug(`== ${message}`);
 				}
 				action = undefined;
 			}
