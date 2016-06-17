@@ -32,6 +32,7 @@ var options = stdio.getopt({
 	'upvote': {           key: 'I', args: 1, description: 'Vote for delegates in file specified'},
 	'downvote': {         key: 'O', args: 1, description: 'Remove vote from delegates in file specified'},
 	'checkVotes': {       key: 'C', args: 0, description: 'Checks current votes, compares with upvote/downvote data in files (flags -I and -O)'},
+	'autoRemoveVotes': {  key: 'R', args: 0, description: 'Removes votes automatically from delegates not on the upvote list provided with -I'},
 	'commitVotes': {      key: 'A', args: 0, description: 'Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list'},
 	'voteForIrondizzy': { key: 'v', args: 0, description: 'Allow two spare voting slots to go to "irondizzy" and "hmachado"' },
 	'isForging': {        key: 'y', args: 0, description: 'Test if forging'},
@@ -259,6 +260,7 @@ var liskak = function(_config, _options) {
 						_stats["stale"] += 1;
 					}
 					_stats["height"] = value;
+					_stats["consecutiveFailures"] = 0;
 					break;
 				default:
 					_stats["consecutiveFailures"] = 0;
@@ -584,6 +586,7 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 											console.log(`You will upvote ${newVotes}`);
 											console.log(`You may still vote in ${LISK_MAX_VOTES - futureVotes} delegates after this`);
 											console.log(`You will have ${futureVotes} of ${LISK_MAX_VOTES} votes from your account`);
+											//TODO: options.autoRemoveVotes
 											if (futureVotes - negativeVotes > LISK_MAX_VOTES) {
 												var delta = futureVotes - negativeVotes - LISK_MAX_VOTES;
 												console.log(`You will need to remove ${delta} delegates from your list (run me with the "-l" flag)`);
@@ -847,7 +850,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 									logger.debug(runtime.stats("disabled"));
 								}
 							} else {
-								logger.error(`Could not get forging status from host`);
+								logger.error(`Could not get forging status from host ${element}`);
 								logger.debug(runtime.stats("failure"));
 							}
 						},
@@ -868,6 +871,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					if (data.success === true) {
 						runtime.stats("height", data.height);
 					} else {
+						logger.error(`Unable to get block height from host ${element}`);
 						runtime.stats("failure");
 					}
 				},
