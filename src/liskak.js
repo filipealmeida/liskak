@@ -82,7 +82,7 @@ try {
 	config = require(configFilename);	
 } catch(e) {
 	logger.error(`Configuration file ${configFilename} is an invalid json file: ${e.message}`);
-	sys.exit(10);	
+	process.exit(15);	
 }
 config["filename"] = configFilename;
 
@@ -91,7 +91,7 @@ Object.keys(REQUIRED_CONFIG_KEYS).forEach(function(e, k, a) {
 	var requiredParameter = REQUIRED_CONFIG_KEYS[k];
 	if (config[requiredParameter] === undefined) {
 		logger.error(`Configuration file ${configFilename} must have a value for key "${requiredParameter}"`);
-		sys.exit(10);
+		process.exit(150);
 	}
 });
 
@@ -725,7 +725,7 @@ if (options.supervise) {
 		logfile = options.supervise  + "\\app.log";
 	} else {
 		logger.error(`"${options.supervise}" is not a valid lisk path (no app.log found)`);
-		sys.exit(10);
+		process.exit(10);
 	}
 
 	if (fs.existsSync(options.supervise  + sep + "lisk.sh", fs.F_OK)) {
