@@ -373,6 +373,8 @@ var liskak = function(_config, _options) {
 					logger.debug(data);
 					deferred.resolve(data);
 				} catch (e) {
+					logger.error("Error handling response from server, failure to parse as JSON");
+					logger.error(responseText);
 					deferred.reject(e);
 				}
 				
