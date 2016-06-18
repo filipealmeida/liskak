@@ -258,6 +258,8 @@ var liskak = function(_config, _options) {
 				case "height":
 					if (_stats["height"] == value) {
 						_stats["stale"] += 1;
+					} else {
+						_stats["stale"] = 0;
 					}
 					_stats["height"] = value;
 					_stats["consecutiveFailures"] = 0;
