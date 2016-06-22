@@ -32,7 +32,7 @@ var options = stdio.getopt({
 	'upvote': {           key: 'I', args: 1, description: 'Vote for delegates in file specified'},
 	'downvote': {         key: 'O', args: 1, description: 'Remove vote from delegates in file specified'},
 	'checkVotes': {       key: 'C', args: 0, description: 'Checks current votes, compares with upvote/downvote data in files (flags -I and -O)'},
-	'autoRemoveVotes': {  key: 'R', args: 0, description: 'Removes votes automatically from delegates not on the upvote list provided with -I'},
+	'replaceVotes': {     key: 'R', args: 0, description: 'Set the upvotes exactly as provided by the upvote list from -I flag'},
 	'commitVotes': {      key: 'A', args: 0, description: 'Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list'},
 	'voteForIrondizzy': { key: 'v', args: 0, description: 'Allow two spare voting slots to go to "irondizzy" and "hmachado"' },
 	'isForging': {        key: 'y', args: 0, description: 'Test if forging'},
@@ -549,10 +549,15 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 													delegateCompare[username] = delegateCompare[username] + 1;
 												} else {
 													username = data["delegates"][element]["address"];
-													if (delegateCompare[username] !== undefined) {
-														delegateCompare[username] = delegateCompare[username] + 1;
+													//TODO: options.replaceVotes - test this
+													if (options.replaceVotes === true) {
+														delegateCompare[username] = 0;
 													} else {
-														delegateCompare[username] = 2;
+														if (delegateCompare[username] !== undefined) {
+															delegateCompare[username] = delegateCompare[username] + 1;
+														} else {
+															delegateCompare[username] = 2;
+														}
 													}
 												}
 												countVotes++;
@@ -592,7 +597,6 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 											console.log(`You will upvote ${newVotes}`);
 											console.log(`You may still vote in ${LISK_MAX_VOTES - futureVotes} delegates after this`);
 											console.log(`You will have ${futureVotes} of ${LISK_MAX_VOTES} votes from your account`);
-											//TODO: options.autoRemoveVotes
 											if (futureVotes - negativeVotes > LISK_MAX_VOTES) {
 												var delta = futureVotes - negativeVotes - LISK_MAX_VOTES;
 												console.log(`You will need to remove ${delta} delegates from your list (run me with the "-l" flag)`);
