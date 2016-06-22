@@ -815,11 +815,11 @@ if (options.supervise || options.logfile || options.liskscript) {
 					//issue action
 					switch (action) {
 						default:
-							logger.warn(`Performing "bash lisk.sh ${action}"`);
 							var command = "cd "+ options.supervise +" && bash lisk.sh " + action;
 							if (options.liskscript) {
 								command = "bash " + lisksh + " " + action;
 							}
+							logger.warn(`Performing "${command}"`);
 							exec(command, (err, stdout, stderr) => {
 								if (err) {
 									logger.error(err);
