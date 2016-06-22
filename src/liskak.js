@@ -44,6 +44,8 @@ var options = stdio.getopt({
 	'lsktransfer': {      key: 'T', args: 2, description: 'Transfer LSK^8 to an address from your configured account: -t LSK ADDRESS' },
 	'failoverMonkey': {   key: 'f', args: '*', description: 'Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures'},
 	'supervise': {        key: 'S', args: 1, description: 'Provide lisk path to manage lisk process locally (handles fork3, etc.)'},
+	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
+	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
 	'maxBlocksDelayed': { key: 'D', args: 1, description: 'Maximum number of block difference between nodes before change forging node', default: NODE_MAX_BLOCK_DELAY}
@@ -704,39 +706,50 @@ if (options.balance) {
                |___/         |___/                                   
 */
 
-/*
-info 2016-06-03 10:42:29 Fork { delegate: '2be0301710d1295f9afeba6c469f7447e6915e3e63fcbdd69c3fa54a50184803',
-  block:
-   { id: '8858035861396450314',
-     timestamp: 806330,
-     height: 73339,
-     previousBlock: '6808414619110397701' },
-  cause: 3 }
-*/
-if (options.supervise) {
+if (options.supervise || options.logfile || options.liskscript) {
 	var exec = require('child_process').exec;
 	function puts(error, stdout, stderr) { sys.puts(stdout) }
 
 	var logfile = undefined;
 	var lisksh = undefined;
 	var sep = "/";
-	if (fs.existsSync(options.supervise  + "/app.log", fs.F_OK)) {
-		logger.info(`Looking at the lisk log file "${options.supervise}/app.log"`);
-		logfile = options.supervise  + "/app.log";
-	} else if (fs.existsSync(options.supervise  + "\\app.log", fs.F_OK)) {
-		logger.info(`Looking at the lisk log file "${options.supervise}\\app.log"`);
-		sep = "\\";
-		logfile = options.supervise  + "\\app.log";
+	if (options.logfile) {
+		if (fs.existsSync(options.logfile, fs.F_OK)) {
+			logger.info(`Looking at the lisk log file "${options.logfile}"`);
+			logfile = options.logfile;
+		} else {
+			logger.error(`"${options.logfile}" is not a valid lisk logfile`);
+			process.exit(12);
+		}
 	} else {
-		logger.error(`"${options.supervise}" is not a valid lisk path (no app.log found)`);
-		process.exit(10);
+		if (fs.existsSync(options.supervise  + "/app.log", fs.F_OK)) {
+			logger.info(`Looking at the lisk log file "${options.supervise}/app.log"`);
+			logfile = options.supervise  + "/app.log";
+		} else if (fs.existsSync(options.supervise  + "\\app.log", fs.F_OK)) {
+			logger.info(`Looking at the lisk log file "${options.supervise}\\app.log"`);
+			sep = "\\";
+			logfile = options.supervise  + "\\app.log";
+		} else {
+			logger.error(`"${options.supervise}" is not a valid lisk path (no app.log found)`);
+			process.exit(10);
+		}		
 	}
 
-	if (fs.existsSync(options.supervise  + sep + "lisk.sh", fs.F_OK)) {
-		lisksh = options.supervise  + sep + "lisk.sh";
-		logger.info(`Lisk shell script found: ${options.supervise  + sep + "lisk.sh"}`);
+	if (options.liskscript) {
+		if (fs.existsSync(options.liskscript, fs.F_OK)) {
+			logger.info(`Looking at the lisk log file "${options.liskscript}"`);
+			lisksh = options.liskscript;
+		} else {
+			logger.error(`"${options.liskscript}" does not exist`);
+			process.exit(15);
+		}
 	} else {
-		logger.warn("Lisk shell script (lisk.sh) not found in the path provided after -S. Restarts will not occur!");
+		if (fs.existsSync(options.supervise  + sep + "lisk.sh", fs.F_OK)) {
+			lisksh = options.supervise  + sep + "lisk.sh";
+			logger.info(`Lisk shell script found: ${options.supervise  + sep + "lisk.sh"}`);
+		} else {
+			logger.warn("Lisk shell script (lisk.sh) not found in the path provided after -S. Restarts will not occur!");
+		}
 	}
 
 	if (logfile !== undefined) {
@@ -799,7 +812,11 @@ if (options.supervise) {
 					switch (action) {
 						default:
 							logger.warn(`Performing "bash lisk.sh ${action}"`);
-							exec("cd "+ options.supervise +" && bash lisk.sh " + action, (err, stdout, stderr) => {
+							var command = "cd "+ options.supervise +" && bash lisk.sh " + action;
+							if (options.liskscript) {
+								command = "bash " + lisksh + " " + action;
+							}
+							exec(command, (err, stdout, stderr) => {
 								if (err) {
 									logger.error(err);
 									return;

@@ -49,30 +49,32 @@ You can always run issuing "node src/liskak.js ARGS"
 someuser@foo:~/liskak$ ./liskak.sh --help
 USAGE: node liskak.js [OPTION1] [OPTION2]... arg1 arg2...
 The following options are supported:
-  -c, --configuration <ARG1>          	Path to the configuration json file (defaults to "liskak.json")
-  -i, --info                          	Displays your account info
-  -N, --newAccount                    	Creates a new account
-  -b, --balance <ARG1>                	Displays an account's balance
-  -d, --getHeight                     	Get block height
-  -L, --logLevel <ARG1>               	Logging level, one of: error, warn, info verbose, debug, silly ("info" by default)
-  -l, --listVotes <ARG1>              	Lists your votes
-  -I, --upvote <ARG1>                 	Vote for delegates in file specified
-  -O, --downvote <ARG1>               	Remove vote from delegates in file specified
-  -C, --checkVotes                    	Checks current votes, compares with upvote/downvote data in files (flags -I and -O)
-  -A, --commitVotes                   	Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list
-  -v, --voteForIrondizzy              	Allow two spare voting slots to go to "irondizzy" and "hmachado"
-  -y, --isForging                     	Test if forging
-  -Y, --enableForging                 	Enable forging
-  -W, --disableForging                	Disable forging
-  -z, --status                        	Reports on sync status of node
-  -s, --donate <ARG1>                 	Donate LSK to this great cause, default: 5
-  -t, --transfer <ARG1> <ARG2>        	Transfer LSK to an address from your configured account: -t LSK ADDRESS
-  -T, --lsktransfer <ARG1> <ARG2>		Transfer LSK^8 to an address from your configured account: -t LSK ADDRESS
-  -S, --supervise <ARG1>                Provide lisk path to manage lisk process locally (handles forks, etc.),
-  -f, --failoverMonkey <ARG1>...<ARGN>	Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
-  -P, --pollingInterval <ARG1>        	Interval between node polling in milliseconds ("10000" by default)
-  -F, --maxFailures <ARG1>            	Maximum failures tolerated when chatting with lisk nodes ("10" by default)
-  -D, --maxBlocksDelayed <ARG1>       	Maximum number of block difference between nodes before change forging node ("3" by default)
+  -c, --configuration <ARG1>            Path to the configuration json file (defaults to ./liskak.json)
+  -i, --info                            Displays your account info
+  -N, --newAccount                      Creates a new account
+  -b, --balance <ARG1>                  Displays an account's balance
+  -d, --getHeight                       Get block height
+  -L, --logLevel <ARG1>                 Logging level, one of: error, warn, info verbose, debug, silly ("info" by default)
+  -l, --listVotes <ARG1>                Lists your votes
+  -I, --upvote <ARG1>                   Vote for delegates in file specified
+  -O, --downvote <ARG1>                 Remove vote from delegates in file specified
+  -C, --checkVotes                      Checks current votes, compares with upvote/downvote data in files (flags -I and -O)
+  -A, --commitVotes                     Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list
+  -v, --voteForIrondizzy                Allow two spare voting slots to go to "irondizzy" and "hmachado"
+  -y, --isForging                       Test if forging
+  -Y, --enableForging                   Enable forging
+  -W, --disableForging                  Disable forging
+  -z, --status                          Reports on sync status of node
+  -s, --donate <ARG1>                   Donate LSK to this great cause, default: 5
+  -t, --transfer <ARG1> <ARG2>          Transfer LSK to an address from your configured account: -t LSK ADDRESS
+  -T, --lsktransfer <ARG1> <ARG2>       Transfer LSK^8 to an address from your configured account: -t LSK ADDRESS
+  -f, --failoverMonkey <ARG1>...<ARGN>  Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
+  -S, --supervise <ARG1>                Provide lisk path to manage lisk process locally (handles fork3, etc.)
+  -K, --liskscript <ARG1>               Provide absolute path for lisk script: lisk.sh for operations (supervise implied)
+  -J, --logfile <ARG1>                  Provide absolute path for lisk logfile (supervise implied)
+  -P, --pollingInterval <ARG1>          Interval between node polling in milliseconds ("10000" by default)
+  -F, --maxFailures <ARG1>              Maximum failures tolerated when chatting with lisk nodes ("10" by default)
+  -D, --maxBlocksDelayed <ARG1>         Maximum number of block difference between nodes before change forging node ("3" by default)
 
 ```
 
@@ -108,7 +110,7 @@ someuser@foo:~/liskak$ ./liskak.sh -f https://NODE1:8001 https://NODE2:8001
 
 Please advise for further rules by opening an issue.
 
-Example:
+Example #1: Lisk 0.3.1 and below, assumes app.log and lisk.sh under the folder provided
 
 ```
 someuser@foo:~/liskak$ ./liskak.sh -S /opt/lisk
@@ -119,6 +121,19 @@ someuser@foo:~/liskak$ ./liskak.sh -S /opt/lisk
 2016-06-03T17:11:45.103Z ERROR Node has forked with cause: 3, issuing rebuild
 2016-06-03T17:11:45.109Z WARN Performing "bash lisk.sh rebuild"
 ```
+
+Example #2: If you have lisk.sh and or app.log on other locations, use the following flavour
+
+```
+someuser@foo:~/liskak$ ./liskak.sh -J /path/to/app.log -K /path/to/lisk.sh
+2016-06-03T17:09:37.562Z INFO Initializing
+2016-06-03T17:09:37.593Z INFO Looking at the lisk log file "/opt/lisk/app.log"
+2016-06-03T17:09:37.594Z INFO Lisk shell script found: /opt/lisk/lisk.sh
+2016-06-03T17:09:37.631Z INFO Tailing /opt/lisk/app.log
+2016-06-03T17:11:45.103Z ERROR Node has forked with cause: 3, issuing rebuild
+2016-06-03T17:11:45.109Z WARN Performing "bash lisk.sh rebuild"
+```
+
 WARNING: this surelly won't work in windows; please donate to buy a copy :)
 
 ### New account
