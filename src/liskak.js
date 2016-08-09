@@ -772,7 +772,9 @@ if (options.supervise || options.logfile || options.liskscript) {
 		//TODO: only acts after a new match, revision to speed up log message recog
 		t.on("line", function(data) {
 			var matches;
-			if (matches = data.replace(/(\n|\r)+$/, '').match(/^(\w+) (\d+-\d+-\d+) (\d+:\d+:\d+) (\w+) (.*)/)) {
+			if (matches = data.match(/^\[(\w+)\] (\d+-\d+-\d+) (\d+:\d+:\d+) \| (\w+) - (.*)/)) {
+				verb = matches[4];
+				message = matches[5];
 				if (message !== "") {
 					switch (verb) {
 						case "Fork":
