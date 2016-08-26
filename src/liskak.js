@@ -719,7 +719,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 	var sep = "/";
 	if (options.logfile) {
 		if (fs.existsSync(options.logfile, fs.F_OK)) {
-			logger.info(`Looking at the lisk log file "${options.logfile}"`);
+			logger.info(`Found log file "${options.logfile}"`);
 			logfile = options.logfile;
 		} else {
 			logger.error(`"${options.logfile}" is not a valid lisk logfile`);
@@ -727,10 +727,10 @@ if (options.supervise || options.logfile || options.liskscript) {
 		}
 	} else {
 		if (fs.existsSync(options.supervise  + "/app.log", fs.F_OK)) {
-			logger.info(`Looking at the lisk log file "${options.supervise}/app.log"`);
+			logger.info(`Found log file "${options.supervise}/app.log"`);
 			logfile = options.supervise  + "/app.log";
 		} else if (fs.existsSync(options.supervise  + "\\app.log", fs.F_OK)) {
-			logger.info(`Looking at the lisk log file "${options.supervise}\\app.log"`);
+			logger.info(`Found log file "${options.supervise}\\app.log"`);
 			sep = "\\";
 			logfile = options.supervise  + "\\app.log";
 		} else {
@@ -741,10 +741,10 @@ if (options.supervise || options.logfile || options.liskscript) {
 
 	if (options.liskscript) {
 		if (fs.existsSync(options.liskscript, fs.F_OK)) {
-			logger.info(`Looking at the lisk log file "${options.liskscript}"`);
+			logger.info(`Found log file "${options.liskscript}"`);
 			lisksh = options.liskscript;
 		} else {
-			logger.error(`"${options.liskscript}" does not exist`);
+			logger.error(`"${options.liskscript}" file does not exist`);
 			process.exit(15);
 		}
 	} else {
@@ -806,6 +806,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 							action = undefined;
 					}
 				}
+				//TODO: redundant trash from older version, confirm removal
 				verb = matches[4];
 				message = matches[5];
 			} else {
