@@ -817,6 +817,20 @@ if (options.supervise || options.logfile || options.liskscript) {
 				if ((new Date()).getTime() > canAct) {
 					//issue action
 					switch (action) {
+						case "restart":
+							var command = "cd "+ options.supervise +" && bash lisk.sh stop" + "; sleep 30 ;" + "cd "+ options.supervise +" && bash lisk.sh start" + ";";
+							if (options.liskscript) {
+								command = "bash " + lisksh + " stop" + "; sleep 30 ;" + "bash " + lisksh + " start" + ";";
+							}
+							logger.warn(`Performing "${command}"`);
+							exec(command, (err, stdout, stderr) => {
+								if (err) {
+									logger.error(err);
+									return;
+								}
+								logger.info(stdout);
+							});
+							break;
 						default:
 							var command = "cd "+ options.supervise +" && bash lisk.sh " + action;
 							if (options.liskscript) {
