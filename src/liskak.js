@@ -1001,5 +1001,17 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				runtime.node("forgeEnable").then(defaultDisplay, logger.error);
 			}
 		}
+		if (nodeWithBestBlockHeight === undefined) {
+        		for (var idx = 0; idx < options.failoverMonkey.length; idx++) {
+                		var u = url.parse(options.failoverMonkey[idx]);
+                		var setup = JSON.parse(JSON.stringify(config));
+                		setup.host = u['hostname'];
+                		setup.port = u['port'];
+                		setup.protocol = u['protocol'].substr(0, u['protocol'].indexOf(":"));
+                		logger.info(`Enabling monitor for node ${options.failoverMonkey[idx]}`);
+                		configuration[u.href] = {};
+                		configuration[u.href]['runtime'] = new liskak(setup, options);
+        		}
+		}
 	}, options.pollingInterval);
 }
