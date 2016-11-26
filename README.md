@@ -28,6 +28,13 @@ Do as you will, have a delegation!
 # Installing Lisk Army Knife
 You'll need to have node version above v4.0.0 on the path.
 
+To install node 4.x on Ubuntu:
+
+```
+curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
 Then, download the master from github and:
 
 1. unzip liskak-master.zip
