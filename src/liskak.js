@@ -6,6 +6,7 @@ const NODE_MAX_BLOCK_DELAY = 3;
 const LISK_MAX_VOTES = 101;
 const LISK_MAX_BALLOTS = 33;
 const MAX_INMEMORY_DELEGATE_PAGES = 10;
+const MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING = 15;
 var monitorIteration = 0;
 var stdio = require('stdio');
 var process = require('process');
@@ -47,6 +48,7 @@ var options = stdio.getopt({
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
 	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
+	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, set to 0 for no action (default: 15)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
 	'maxBlocksDelayed': { key: 'D', args: 1, description: 'Maximum number of block difference between nodes before change forging node', default: NODE_MAX_BLOCK_DELAY}
 });
@@ -712,6 +714,7 @@ if (options.balance) {
 
 if (options.supervise || options.logfile || options.liskscript) {
 	var exec = require('child_process').exec;
+	var lastBlockTime = (new Date()).getTime();
 	function puts(error, stdout, stderr) { sys.puts(stdout) }
 
 	var logfile = undefined;
@@ -813,8 +816,24 @@ if (options.supervise || options.logfile || options.liskscript) {
 				message += data;
 			}
 
+			//[inf] 2016-11-23 06:35:47 | Block 12478616701473395955 loaded from: 159.203.12.241:7000 - height: 910911
+			if (options.minutesWithoutBlock > 0) {
+				if (matches = data.match(/^\[(\w+)\] (\d+-\d+-\d+) (\d+:\d+:\d+) \| (Block) (.*)/)) {
+					lastBlockTime = (new Date()).getTime() - lastBlockTime;
+					//15 minutes and no blocks?!
+					if (lastBlockTime > 1000 * 60 * options.minutesWithoutBlock) {
+						logger.warn(`No blocks for ${options.minutesWithoutBlock} minutes, issuing rebuild.`);
+						action = "rebuild";
+					}
+				}
+			}
+
 			if (action !== undefined) {
 				if ((new Date()).getTime() > canAct) {
+					var extraArguments = "";
+					if (config && config.supervise && config.supervise[action] && config.supervise[action].extraArguments) {
+    					extraArguments = " " + config.supervise[action].extraArguments;
+					}
 					//issue action
 					switch (action) {
 						case "restart":
@@ -832,9 +851,9 @@ if (options.supervise || options.logfile || options.liskscript) {
 							});
 							break;
 						default:
-							var command = "cd "+ options.supervise +" && bash lisk.sh " + action;
+							var command = "cd "+ options.supervise +" && bash lisk.sh " + action + extraArguments;
 							if (options.liskscript) {
-								command = "bash " + lisksh + " " + action;
+								command = "bash " + lisksh + " " + action + extraArguments;
 							}
 							logger.warn(`Performing "${command}"`);
 							exec(command, (err, stdout, stderr) => {
