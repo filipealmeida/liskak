@@ -148,7 +148,7 @@ var defaultDisplay = function(data) {
 			}
 		});
 	} else {
-		logger.error(`Could not get handle the response:`, data);
+		logger.error(`Could not handle the response:`, data);
 	}
 }
 
