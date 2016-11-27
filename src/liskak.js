@@ -998,7 +998,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 			if (alive.length > 1) {
 				logger.warn("Forging enabled at more than one node, leaving just one enabled");
 				for (var i = 1; i < alive.length; i++) {
-					logger.warn(`Prepare to stop forging at ${nodeDisable[i]}`);
+					logger.warn(`Prepare to stop forging at ${alive[i]}`);
 					nodeDisable.push(alive[i]);
 				}
 			}
