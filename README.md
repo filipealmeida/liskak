@@ -80,6 +80,7 @@ The following options are supported:
   -K, --liskscript <ARG1>               Provide absolute path for lisk script: lisk.sh for operations (supervise implied)
   -J, --logfile <ARG1>                  Provide absolute path for lisk logfile (supervise implied)
   -P, --pollingInterval <ARG1>          Interval between node polling in milliseconds ("10000" by default)
+  -B, --minutesWithoutBlock <ARG1>    	Minutes without blocks before issuing a rebuild, set to 0 for no action ("15" by default, set to 0 to disable)
   -F, --maxFailures <ARG1>              Maximum failures tolerated when chatting with lisk nodes ("10" by default)
   -D, --maxBlocksDelayed <ARG1>         Maximum number of block difference between nodes before change forging node ("3" by default)
 
