@@ -48,7 +48,7 @@ var options = stdio.getopt({
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
 	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
-	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, set to 0 for no action (default: 15)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
+	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, set to 0 for no action', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
 	'maxBlocksDelayed': { key: 'D', args: 1, description: 'Maximum number of block difference between nodes before change forging node', default: NODE_MAX_BLOCK_DELAY}
 });
@@ -771,6 +771,20 @@ if (options.supervise || options.logfile || options.liskscript) {
 		var verb = "";
 		var canAct = 0;
 		var action = undefined;
+		//TODO: Time to rewrite liskak! 
+		if (options.minutesWithoutBlock > 0) {
+			logger.info(`Setting up rebuild on no blocks after ${options.minutesWithoutBlock} minutes timer.`);
+			var intForgePolling = setInterval(function () {
+				var timeSinceLastBlock = (new Date()).getTime() - lastBlockTime;
+				logger.info(`No blocks for ${timeSinceLastBlock} ms`);
+				if (timeSinceLastBlock > 1000 * 60 * options.minutesWithoutBlock) {
+					logger.warn(`No blocks for ${options.minutesWithoutBlock} minutes, issuing rebuild.`);
+					action = "rebuild";
+					lastBlockTime = (new Date()).getTime();
+					t.emit("line", "No blocks, do something!");
+				}
+			}, 60000);
+		}
 		//TODO: check tail of message string, parse of message requires revision
 		//TODO: only acts after a new match, revision to speed up log message recog
 		t.on("line", function(data) {
@@ -818,13 +832,9 @@ if (options.supervise || options.logfile || options.liskscript) {
 
 			//[inf] 2016-11-23 06:35:47 | Block 12478616701473395955 loaded from: 159.203.12.241:7000 - height: 910911
 			if (options.minutesWithoutBlock > 0) {
+				var timeSinceLastBlock = (new Date()).getTime() - lastBlockTime;
 				if (matches = data.match(/^\[(\w+)\] (\d+-\d+-\d+) (\d+:\d+:\d+) \| (Block) (.*)/)) {
-					var timeSinceLastBlock = (new Date()).getTime() - lastBlockTime; 
-					//15 minutes and no blocks?!
-					if (timeSinceLastBlock > 1000 * 60 * options.minutesWithoutBlock) {
-						logger.warn(`No blocks for ${options.minutesWithoutBlock} minutes, issuing rebuild.`);
-						action = "rebuild";
-					}
+					logger.info(`Block found, previous seen ${timeSinceLastBlock}ms ago.`);
 					lastBlockTime = (new Date()).getTime();
 				}
 			}
