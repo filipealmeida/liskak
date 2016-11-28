@@ -819,12 +819,13 @@ if (options.supervise || options.logfile || options.liskscript) {
 			//[inf] 2016-11-23 06:35:47 | Block 12478616701473395955 loaded from: 159.203.12.241:7000 - height: 910911
 			if (options.minutesWithoutBlock > 0) {
 				if (matches = data.match(/^\[(\w+)\] (\d+-\d+-\d+) (\d+:\d+:\d+) \| (Block) (.*)/)) {
-					lastBlockTime = (new Date()).getTime() - lastBlockTime;
+					var timeSinceLastBlock = (new Date()).getTime() - lastBlockTime; 
 					//15 minutes and no blocks?!
-					if (lastBlockTime > 1000 * 60 * options.minutesWithoutBlock) {
+					if (timeSinceLastBlock > 1000 * 60 * options.minutesWithoutBlock) {
 						logger.warn(`No blocks for ${options.minutesWithoutBlock} minutes, issuing rebuild.`);
 						action = "rebuild";
 					}
+					lastBlockTime = (new Date()).getTime();
 				}
 			}
 
