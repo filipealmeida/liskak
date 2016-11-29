@@ -74,7 +74,7 @@ The following options are supported:
   -z, --status                          Reports on sync status of node
   -s, --donate <ARG1>                   Donate LSK to this great cause, default: 5
   -t, --transfer <ARG1> <ARG2>          Transfer LSK to an address from your configured account: -t LSK ADDRESS
-  -T, --lsktransfer <ARG1> <ARG2>       Transfer LSK^8 to an address from your configured account: -t LSK ADDRESS
+  -T, --lsktransfer <ARG1> <ARG2>       Transfer LSK^-8 to an address from your configured account: -t LSK ADDRESS
   -f, --failoverMonkey <ARG1>...<ARGN>  Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
   -S, --supervise <ARG1>                Provide lisk path to manage lisk process locally (handles fork3, etc.)
   -K, --liskscript <ARG1>               Provide absolute path for lisk script: lisk.sh for operations (supervise implied)

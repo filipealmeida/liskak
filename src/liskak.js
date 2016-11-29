@@ -42,7 +42,7 @@ var options = stdio.getopt({
 	'status': {           key: 'z', args: 0, description: 'Reports on sync status of node'},
 	'donate': {           key: 's', args: 1, description: 'Donate LSK to this great cause, default: 5' },
 	'transfer': {         key: 't', args: 2, description: 'Transfer LSK to an address from your configured account: -t LSK ADDRESS' },
-	'lsktransfer': {      key: 'T', args: 2, description: 'Transfer LSK^8 to an address from your configured account: -t LSK ADDRESS' },
+	'lsktransfer': {      key: 'T', args: 2, description: 'Transfer LSK^-8 to an address from your configured account: -T LSK ADDRESS' },
 	'failoverMonkey': {   key: 'f', args: '*', description: 'Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures'},
 	'supervise': {        key: 'S', args: 1, description: 'Provide lisk path to manage lisk process locally (handles fork3, etc.)'},
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
