@@ -164,6 +164,22 @@ someuser@foo:~/liskak$ ./liskak.sh -J /path/to/app.log -K /path/to/lisk.sh
 
 WARNING: this surelly won't work in windows; please donate to buy a copy :)
 
+Example #3:
+
+Additional usage of supervise is included in a bundled script `monitorNode.sh`. This script will automatically monitor your node and rebuild after 5 minutes using the default settings for lisk. In order to be used on mainnet the script will need to be modified. Please note that this script assumes lisk installation defaults, if your lisk installation is not default you will also need to modify those parameters.
+
+
+```
+RELEASE="test" <-- This needs to read main instead of test.
+LISK_LOG="/home/$USER/lisk-$RELEASE/logs/lisk_$RELEASE.app.log"
+LISK_SH="/home/$USER/lisk-$RELEASE/lisk.sh"
+LOG_FILE="logs/monitorNode.log"
+MINUTES="5"
+CONFIG="src/liskak_testnet.json" <-- This should read mainnet instead of testnet
+pkill -f $LISK_LOG -9
+nohup bash liskak.sh -c $CONFIG -J $LISK_LOG -K $LISK_SH -B $MINUTES  > $LOG_FILE 2>&1&
+```
+
 ### New account
 If executed with the -N flag, Lisk Army Knife will produce a new key for you which you can use as an account.
 
