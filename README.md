@@ -111,6 +111,26 @@ someuser@foo:~/liskak$ ./liskak.sh -f https://NODE1:8001 https://NODE2:8001
 ......
 ```
 
+Additional usage of this can be found in the bundled scripts, `monitorMain.sh` and `monitorTest.sh`. These files include everything needed to enable forging monitoring.
+
+Each script has an associated config file, `liskak_testnet.json` and `liskak_mainnet.json` in the `src/` folder. Simply add the delegate secret you wish you monitor to that file.
+Then edit the monitoring script for the network you will be monitoring and include your hosts.
+
+Example:
+
+```
+HOST1="http://127.0.0.1:8000"
+HOST2=""
+HOST3=""
+HOST4=
+CONFIG="src/liskak_mainnet.json"
+LOG_FILE="logs/forgingMain.log"
+pkill -f $CONFIG -9
+nohup bash liskak.sh -c $CONFIG -f $HOST1 $HOST2 $HOST3 $HOST4 > $LOG_FILE 2>&1&
+```
+
+Using mainnet as an example, the script using `bash monitorMain.sh`. The logs for this will be found in `logs/`, this can be watched to see the monitoring in action.
+
 ### Supervision of node and automatic restarts/reloads
 1. Fork 1: issues rebuild but requires work to do this only if you forged the last block (please open an issue with loglines such as this so it can be corrected)
 2. Fork 2: issues a lisk restart
