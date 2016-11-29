@@ -43,6 +43,8 @@ var options = stdio.getopt({
 	'donate': {           key: 's', args: 1, description: 'Donate LSK to this great cause, default: 5' },
 	'transfer': {         key: 't', args: 2, description: 'Transfer LSK to an address from your configured account: -t LSK ADDRESS' },
 	'lsktransfer': {      key: 'T', args: 2, description: 'Transfer LSK^-8 to an address from your configured account: -T LSK ADDRESS' },
+	'multitransfer': {    key: 'm', args: '*', description: 'Transfer LSK to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...' },
+	'multilsktransfer': { key: 'M', args: '*', description: 'Transfer LSK^-8 to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...' },
 	'failoverMonkey': {   key: 'f', args: '*', description: 'Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures'},
 	'supervise': {        key: 'S', args: 1, description: 'Provide lisk path to manage lisk process locally (handles fork3, etc.)'},
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
@@ -509,7 +511,7 @@ var l = new liskak(config, options);
 */
 if (options.info || options.listVotes || options.checkVotes || options.commitVotes || 
 	options.upvote || options.downvote || options.voteForIrondizzy || options.donate || 
-	options.transfer || options.lsktransfer || 
+	options.transfer || options.lsktransfer || options.multitransfer || options.multilsktransfer ||
 	options.isForging || options.enableForging || options.disableForging) {
 	l.node("open").then(
 		function (data) {
@@ -680,6 +682,18 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 					console.log(`Transfering ${value/100000000} LSKs to ${address}`);
 					logger.debug("Transfering", { 'amount': value, 'recipientId': address });
 					l.node("transfer", { 'amount': value, 'recipientId': address }).then(defaultDisplay, logger.error);
+				}
+			}
+			if (options.multitransfer || options.multilsktransfer) {
+				var transfer = options.multitransfer || options.multilsktransfer;
+				if ((transfer.constructor === Array)&&(transfer.length > 0)) {
+					var value = (options.transfer)?transfer[0]*100000000:transfer[0]*1;
+					for (var n = 1; n < transfer.length; n++) {
+						var address = transfer[n];
+						console.log(`Transfering ${value/100000000} LSKs to ${address}`);
+						logger.debug("Transfering", { 'amount': value, 'recipientId': address });
+						l.node("transfer", { 'amount': value, 'recipientId': address }).then(defaultDisplay, logger.error);
+					}
 				}
 			}
 		}, 
