@@ -75,8 +75,8 @@ The following options are supported:
   -s, --donate <ARG1>                   Donate LSK to this great cause, default: 5
   -t, --transfer <ARG1> <ARG2>          Transfer LSK to an address from your configured account: -t LSK ADDRESS
   -T, --lsktransfer <ARG1> <ARG2>       Transfer LSK^-8 to an address from your configured account: -t LSK ADDRESS
-  -m, --multitransfer <ARG1>...<ARGN>   	Transfer LSK to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
-  -M, --multilsktransfer <ARG1>...<ARGN>	Transfer LSK^-8 to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
+  -m, --multitransfer <ARG1>...<ARGN>   Transfer LSK to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
+  -M, --multilsktransfer <ARG1>..<ARGN> Transfer LSK^-8 to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
   -f, --failoverMonkey <ARG1>...<ARGN>  Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
   -S, --supervise <ARG1>                Provide lisk path to manage lisk process locally (handles fork3, etc.)
   -K, --liskscript <ARG1>               Provide absolute path for lisk script: lisk.sh for operations (supervise implied)
@@ -137,6 +137,7 @@ Using mainnet as an example, the script using `bash monitorMain.sh`. The logs fo
 1. Fork 1: issues rebuild but requires work to do this only if you forged the last block (please open an issue with loglines such as this so it can be corrected)
 2. Fork 2: issues a lisk restart
 3. Fork 3: issues a rebuild 
+4. If "-B <MINUTES>" flag set, rebuild is issued if no blocks occur in <MINUTES>
 
 Please advise for further rules by opening an issue.
 
