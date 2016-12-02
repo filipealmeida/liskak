@@ -928,6 +928,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					runtime.node("forgeStatus").then(
 						function (data) {
 							if (data.success === true) {
+								runtime.stats("alive");
 								if (data.enabled === true) {
 									logger.debug(`Forging ENABLED at ${element}`);
 									logger.debug(runtime.stats("enabled"));
