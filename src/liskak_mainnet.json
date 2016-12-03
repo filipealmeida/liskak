@@ -6,7 +6,7 @@
   "proto": "https",
   "supervise": {
     "rebuild": {
-      "extraArguments": "-u https://snapshot.lisknode.io"
+      "extraArguments": "-u `/path/to/liskak/tools/snapshot.newestURL.sh`"
     }
   }
 }
