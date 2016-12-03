@@ -956,6 +956,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 			runtime.node("getHeight").then(
 				function (data) {
 					if (data.success === true) {
+						logger.info(`Node ${element} reports height ${data.height}`);
 						runtime.stats("height", data.height);
 					} else {
 						logger.error(`Unable to get block height from host ${element}`);
