@@ -1,6 +1,7 @@
 "use strict";
 const REQUIRED_CONFIG_KEYS = ['secret', 'host', 'port', 'proto'];
 const NODE_POLLING_INTERVAL = 10000;
+const API_REQUEST_TIMEOUT = 0;
 const NODE_MAX_FAILURES = 10;
 const NODE_MAX_BLOCK_DELAY = 3;
 const LISK_MAX_VOTES = 101;
@@ -50,10 +51,18 @@ var options = stdio.getopt({
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
 	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
+	'apiRequestTimeout': {key: 'w', args: 1, description: 'API request timeout, 0 means disabled', default: API_REQUEST_TIMEOUT},
 	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, default is disabled (0)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
 	'maxBlocksDelayed': { key: 'D', args: 1, description: 'Maximum number of block difference between nodes before change forging node', default: NODE_MAX_BLOCK_DELAY}
 });
+
+//Force types
+options.apiRequestTimeout = parseInt(options.apiRequestTimeout);
+options.minutesWithoutBlock = parseInt(options.minutesWithoutBlock);
+options.maxFailures = parseInt(options.maxFailures);
+options.maxBlocksDelayed = parseInt(options.maxBlocksDelayed);
+options.pollingInterval = parseInt(options.pollingInterval);
 
 var logger = new (winston.Logger)({
 	transports: [
@@ -389,6 +398,12 @@ var liskak = function(_config, _options) {
 				
 			});
 		});
+
+        if (_options.apiRequestTimeout > 0) {
+               request.setTimeout(_options.apiRequestTimeout, function(){
+                        this.abort();
+               }.bind(request));
+        }
 
 		request.on('error', (e) => {
 			logger.error(`Problem with request: ${e.message}`);

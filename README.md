@@ -83,6 +83,7 @@ The following options are supported:
   -J, --logfile <ARG1>                  Provide absolute path for lisk logfile (supervise implied)
   -P, --pollingInterval <ARG1>          Interval between node polling in milliseconds ("10000" by default)
   -B, --minutesWithoutBlock <ARG1>    	Minutes without blocks before issuing a rebuild, default is disabled (0)
+  -w, --apiRequestTimeout <ARG1>        API request timeout, 0 means disabled
   -F, --maxFailures <ARG1>              Maximum failures tolerated when chatting with lisk nodes ("10" by default)
   -D, --maxBlocksDelayed <ARG1>         Maximum number of block difference between nodes before change forging node ("3" by default)
 
