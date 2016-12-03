@@ -68,4 +68,6 @@ if [ ${NODE_VERSION_COMPARE} -gt 0 ]; then
     exit 2;
 fi
 
-node src/liskak.js $*
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd ${DIR} && node src/liskak.js $*
