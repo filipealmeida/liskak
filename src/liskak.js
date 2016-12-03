@@ -269,6 +269,7 @@ var liskak = function(_config, _options) {
 					}
 					_stats["height"] = value;
 					_stats["consecutiveFailures"] = 0;
+					_stats["failure"] = 0;
 					break;
 				default:
 					_stats["consecutiveFailures"] = 0;
