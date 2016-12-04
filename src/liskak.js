@@ -406,8 +406,8 @@ var liskak = function(_config, _options) {
         }
 
 		request.on('error', (e) => {
-			logger.error(`Problem with request: ${e.message}`);
-			deferred.reject(`Problem with request: ${e.message}`);
+			logger.debug(`Problem with request to ${_config["proto"]}://${_config["host"]}:${_config["port"]}: ${e.message} -`);
+			deferred.reject(`Problem with request to ${_config["proto"]}://${_config["host"]}:${_config["port"]}: ${e.message} +`);
 		});
 		if (options.body){
 			var jsonstr = options.body;
