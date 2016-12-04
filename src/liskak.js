@@ -54,7 +54,8 @@ var options = stdio.getopt({
 	'apiRequestTimeout': {key: 'w', args: 1, description: 'API request timeout, 0 means disabled', default: API_REQUEST_TIMEOUT},
 	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, default is disabled (0)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
-	'maxBlocksDelayed': { key: 'D', args: 1, description: 'Maximum number of block difference between nodes before change forging node', default: NODE_MAX_BLOCK_DELAY}
+	'maxBlocksDelayed': { key: 'D', args: 1, description: 'Maximum number of block difference between nodes before change forging node', default: NODE_MAX_BLOCK_DELAY},
+	'testMode': {         key: 'X', args: 0, description: 'Test mode' }
 });
 
 //Force types
@@ -63,6 +64,9 @@ options.minutesWithoutBlock = parseInt(options.minutesWithoutBlock);
 options.maxFailures = parseInt(options.maxFailures);
 options.maxBlocksDelayed = parseInt(options.maxBlocksDelayed);
 options.pollingInterval = parseInt(options.pollingInterval);
+if (options.testMode === true) {
+	options.logLevel = "silly";
+} 
 
 var logger = new (winston.Logger)({
 	transports: [
@@ -741,6 +745,26 @@ if (options.balance) {
 |_|  \___/|_|  \__, |_|_| |_|\__, | |_|  \__,_|_|_|\___/ \_/ \___|_|   
                |___/         |___/                                   
 */
+function readLines(input, func) {
+  var remaining = '';
+
+  input.on('data', function(data) {
+    remaining += data;
+    var index = remaining.indexOf('\n');
+    while (index > -1) {
+      var line = remaining.substring(0, index);
+      remaining = remaining.substring(index + 1);
+      func(line);
+      index = remaining.indexOf('\n');
+    }
+  });
+
+  input.on('end', function() {
+    if (remaining.length > 0) {
+      func(remaining);
+    }
+  });
+}
 
 if (options.supervise || options.logfile || options.liskscript) {
 	var exec = require('child_process').exec;
@@ -792,6 +816,14 @@ if (options.supervise || options.logfile || options.liskscript) {
 	if (logfile !== undefined) {
 		try {	
 			var t = new tail(logfile, { fromBeginning: false, follow: true, logger: logger});
+			if (options.testMode === true) {
+				exec = function (_cmd, _callback) {
+					logger.warn(_cmd);
+					_callback(undefined, "stdout", "stderr");
+				}
+				readLines(fs.createReadStream(logfile), (data) => { t.emit('line', data)} );
+				t.unwatch()
+			}
 		} catch (e) {
 			logger.error(e);
 		}
@@ -819,6 +851,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 		//TODO: only acts after a new match, revision to speed up log message recog
 		t.on("line", function(data) {
 			var matches;
+			logger.silly(`Read line: ${data}`);
 			if (matches = data.match(/^\[(\w+)\] (\d+-\d+-\d+) (\d+:\d+:\d+) \| (\w+) - (.*)/)) {
 				verb = matches[4];
 				message = matches[5];
