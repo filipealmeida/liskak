@@ -1,6 +1,14 @@
 # liskak
 Lisk Army Knife - Forging failover and command line lisk
 
+:warning: <br />
+After configuration, the following examples perform a donation to the address **8858064098621060602L** (hmachado):<br />
+
+```./liskak.sh -s 10``` *# sends 10 LSK to 8858064098621060602L*<br />
+```./liskak.sh -t 10 8858064098621060602L``` *# transfers 10 LSK to 8858064098621060602L*<br />
+
+Thank you all and go Lisk go!
+
 # Foreword
 Last weekend, while educating a couple of individuals on javascript, they started asking a lot of questions on how to achieve many things in nodejs.
 
