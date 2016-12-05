@@ -36,7 +36,7 @@ var options = stdio.getopt({
 	'checkVotes': {       key: 'C', args: 0, description: 'Checks current votes, compares with upvote/downvote data in files (flags -I and -O)'},
 	'replaceVotes': {     key: 'R', args: 0, description: 'Set the upvotes exactly as provided by the upvote list from -I flag'},
 	'commitVotes': {      key: 'A', args: 0, description: 'Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list'},
-	'voteForIrondizzy': { key: 'v', args: 0, description: 'Allow two spare voting slots to go to "irondizzy" and "hmachado"' },
+	'voteForIrondizzy': { key: 'v', args: 0, description: 'Allow a spare voting slot to go to "hmachado"' },
 	'isForging': {        key: 'y', args: 0, description: 'Test if forging'},
 	'enableForging': {    key: 'Y', args: 0, description: 'Enable forging'},
 	'disableForging': {   key: 'W', args: 0, description: 'Disable forging'},
@@ -218,7 +218,7 @@ var liskak = function(_config, _options) {
 		'donate': {
 			'path': '/api/transactions',
 			'method': 'PUT',
-			'querystring': [ "secret", "publicKey", "secondSecret", ["amount", {}], ["recipientId", "18217073061291465384L"] ]
+			'querystring': [ "secret", "publicKey", "secondSecret", ["amount", {}], ["recipientId", "8858064098621060602L"] ]
 		},
 		'transfer': {
 			'path': '/api/transactions',
@@ -496,9 +496,9 @@ if (fs.existsSync(options.downvote, fs.F_OK)) {
 }
 
 if (options.voteForIrondizzy) {
-	delegateList.push("18217073061291465384L"); 
+	//delegateList.push("18217073061291465384L"); 
 	delegateList.push("8858064098621060602L"); 
-	delegateCompare["18217073061291465384L"] = 1;
+	//delegateCompare["18217073061291465384L"] = 1;
 	delegateCompare["8858064098621060602L"] = 1;
 	options.commitVotes = options.checkVotes = true;
 }
@@ -667,13 +667,6 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 				if (Math.random(1) < 0.01) {
 					console.log("");
 					console.log("==============================================================================");
-					console.log("");
- 					console.log("                            **** Vote for ****");
- 					console.log("               ___ ____   ___  _   _ ____ ___ ____________   __");
-					console.log("              |_ _|  _ \\ / _ \\| \\ | |  _ \\_ _|__  /__  /\\ \\ / /");
-					console.log("               | || |_) | | | |  \\| | | | | |  / /  / /  \\ V / ");
-					console.log("               | ||  _ <| |_| | |\\  | |_| | | / /_ / /_   | |  ");
-					console.log("              |___|_| \\_\\\\___/|_| \\_|____/___/____/____|  |_| ");
 					console.log("");
 					console.log("                       **** Vote for HMACHADO ****");
 					console.log("");

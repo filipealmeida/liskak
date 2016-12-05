@@ -67,7 +67,7 @@ The following options are supported:
   -O, --downvote <ARG1>                 Remove vote from delegates in file specified
   -C, --checkVotes                      Checks current votes, compares with upvote/downvote data in files (flags -I and -O)
   -A, --commitVotes                     Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list
-  -v, --voteForIrondizzy                Allow two spare voting slots to go to "irondizzy" and "hmachado"
+  -v, --voteForIrondizzy                Allow a spare voting slot to go to "hmachado"
   -y, --isForging                       Test if forging
   -Y, --enableForging                   Enable forging
   -W, --disableForging                  Disable forging
