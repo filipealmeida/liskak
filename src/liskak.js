@@ -53,6 +53,7 @@ var options = stdio.getopt({
 	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
 	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, default is disabled (0)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
 	'consensus': {        key: 'Q', args: 1, description: 'Broadhash consensus threshold, reload if under value for two consecutive samples', default: NODE_MIN_CONSENSUS},
+	'inadequateBroadhash': {  key: 'q', args: 0, description: 'Restart on "Inadequate broadhash consensus" message'},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
 	'apiRequestTimeout': {key: 'w', args: 1, description: 'API request timeout, 0 means disabled', default: API_REQUEST_TIMEOUT},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
@@ -929,6 +930,11 @@ if (options.supervise || options.logfile || options.liskscript) {
 							}
 							break;
 						case "Failed":
+							var inadequate;
+							if ((options.inadequateBroadhash === true) && (inadequate = message.match(/Inadequate broadhash consensus (\d+)/))) {
+								logger.error(`Inadequate broadhash consensus (${inadequate[1]}), issuing restart`);
+								action = "restart";
+							}
 							break;
 							//[ERR] 2016-11-30 16:46:00 | Failed to generate block within delegate slot - Inadequate broadhash consensus 35 %
 						case "Starting":
