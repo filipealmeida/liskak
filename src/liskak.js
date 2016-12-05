@@ -898,8 +898,9 @@ if (options.supervise || options.logfile || options.liskscript) {
 						case "Broadhash":
 							var bhmatch;
 							if (bhmatch = message.match(/(\d+)/)) {
-								if (parseInt(bhmatch[0]) < options.consensus) {
-									logger.error(`Broadhash consensus under ${options.consensus}, issuing restart`);
+								var currentConsensus = parseInt(bhmatch[0]);
+								if (currentConsensus < options.consensus) {
+									logger.error(`Broadhash consensus is ${currentConsensus}, under ${options.consensus}, issuing restart`);
 									action = "restart";
 								}
 							}
