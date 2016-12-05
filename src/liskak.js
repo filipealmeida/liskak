@@ -829,6 +829,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 		var verb = "";
 		var canAct = 0;
 		var action = undefined;
+		var syncStarted = undefined;
 		//TODO: Time to rewrite liskak! 
 		if (options.minutesWithoutBlock > 0) {
 			logger.info(`Setting up rebuild on no blocks after ${options.minutesWithoutBlock} minutes timer.`);
@@ -901,6 +902,20 @@ if (options.supervise || options.logfile || options.liskscript) {
 									logger.error(`Broadhash consensus under ${options.consensus}, issuing restart`);
 									action = "restart";
 								}
+							}
+							break;
+						case "Starting":
+							if (message === "sync") {
+								syncStarted = (new Date()).getTime();
+								logger.silly(`Sync started, measuring time at ${syncStarted}`);
+							}
+							break;
+						case "Finished":
+							if (message === "sync") {
+								var elapsedSyncTime = (new Date()).getTime() - syncStarted;
+								logger.silly(`Finished sync in ${elapsedSyncTime}`);
+								logger.info(`Sync time operation detected, finished in ${elapsedSyncTime} ms`);
+								syncStarted = undefined;
 							}
 							break;
 						default:
