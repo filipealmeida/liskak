@@ -51,10 +51,10 @@ var options = stdio.getopt({
 	'supervise': {        key: 'S', args: 1, description: 'Provide lisk path to manage lisk process locally (handles fork3, etc.)'},
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
 	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
-	'consensus': {        key: 'Q', args: 1, description: 'Broadhash consensus threshold, reload if under value', default: NODE_MIN_CONSENSUS},
+	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, default is disabled (0)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
+	'consensus': {        key: 'Q', args: 1, description: 'Broadhash consensus threshold, reload if under value for two consecutive samples', default: NODE_MIN_CONSENSUS},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
 	'apiRequestTimeout': {key: 'w', args: 1, description: 'API request timeout, 0 means disabled', default: API_REQUEST_TIMEOUT},
-	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, default is disabled (0)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
 	'maxBlocksDelayed': { key: 'D', args: 1, description: 'Maximum number of block difference between nodes before change forging node', default: NODE_MAX_BLOCK_DELAY},
 	'testMode': {         key: 'X', args: 0, description: 'Test mode' }
@@ -770,6 +770,8 @@ if (options.supervise || options.logfile || options.liskscript) {
 	var logfile = undefined;
 	var lisksh = undefined;
 	var sep = "/";
+	var consensusLines = 0;
+	var consensusItems = [];
 	if (options.logfile) {
 		if (fs.existsSync(options.logfile, fs.F_OK)) {
 			logger.info(`Found log file "${options.logfile}"`);
@@ -909,12 +911,26 @@ if (options.supervise || options.logfile || options.liskscript) {
 							var bhmatch;
 							if (bhmatch = message.match(/(\d+)/)) {
 								var currentConsensus = parseInt(bhmatch[0]);
+								var averageConsensus = currentConsensus;
+								var consensusSum = 0;
+								consensusItems.push(currentConsensus);
+								consensusLines++;
+								for (var n = 0; n < consensusItems.length; n++) {
+									consensusSum += consensusItems[n];
+								}
+								currentConsensus = consensusSum / consensusItems.length;
 								if (currentConsensus < options.consensus) {
-									logger.error(`Broadhash consensus is ${currentConsensus}, under ${options.consensus}, issuing restart`);
+									logger.error(`Broadhash consensus average of two samples is ${currentConsensus}, under ${options.consensus}, issuing restart`);
 									action = "restart";
+								}
+								if (consensusItems.length > 1) {
+									consensusItems.shift();
 								}
 							}
 							break;
+						case "Failed":
+							break;
+							//[ERR] 2016-11-30 16:46:00 | Failed to generate block within delegate slot - Inadequate broadhash consensus 35 %
 						case "Starting":
 							if (message === "sync") {
 								syncStarted = (new Date()).getTime();
