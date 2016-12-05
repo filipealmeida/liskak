@@ -1,6 +1,7 @@
 "use strict";
 const REQUIRED_CONFIG_KEYS = ['secret', 'host', 'port', 'proto'];
 const NODE_POLLING_INTERVAL = 10000;
+const NODE_MIN_CONSENSUS = 0;
 const API_REQUEST_TIMEOUT = 0;
 const NODE_MAX_FAILURES = 10;
 const NODE_MAX_BLOCK_DELAY = 3;
@@ -50,6 +51,7 @@ var options = stdio.getopt({
 	'supervise': {        key: 'S', args: 1, description: 'Provide lisk path to manage lisk process locally (handles fork3, etc.)'},
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
 	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
+	'consensus': {        key: 'Q', args: 1, description: 'Broadhash consensus threshold, reload if under value', default: NODE_MIN_CONSENSUS},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
 	'apiRequestTimeout': {key: 'w', args: 1, description: 'API request timeout, 0 means disabled', default: API_REQUEST_TIMEOUT},
 	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, default is disabled (0)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
@@ -64,6 +66,7 @@ options.minutesWithoutBlock = parseInt(options.minutesWithoutBlock);
 options.maxFailures = parseInt(options.maxFailures);
 options.maxBlocksDelayed = parseInt(options.maxBlocksDelayed);
 options.pollingInterval = parseInt(options.pollingInterval);
+options.consensus = parseInt(options.consensus);
 if (options.testMode === true) {
 	options.logLevel = "silly";
 } 
@@ -884,6 +887,26 @@ if (options.supervise || options.logfile || options.liskscript) {
 				message = matches[5];
 			} else {
 				message += data;
+			}
+
+			if ((action === undefined) && (matches = data.match(/^\[(\w+)\] (\d+-\d+-\d+) (\d+:\d+:\d+) \| (\w+) (.*)/))) {
+				verb = matches[4];
+				message = matches[5];
+				if (message !== "") {
+					switch (verb) {
+						case "Broadhash":
+							var bhmatch;
+							if (bhmatch = message.match(/(\d+)/)) {
+								if (parseInt(bhmatch[0]) < options.consensus) {
+									logger.error(`Broadhash consensus under ${options.consensus}, issuing restart`);
+									action = "restart";
+								}
+							}
+							break;
+						default:
+							action = undefined;
+					}
+				}
 			}
 
 			//[inf] 2016-11-23 06:35:47 | Block 12478616701473395955 loaded from: 159.203.12.241:7000 - height: 910911
