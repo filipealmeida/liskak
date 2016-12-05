@@ -786,6 +786,16 @@ if (options.supervise || options.logfile || options.liskscript) {
 			logger.info(`Found log file "${options.supervise}\\app.log"`);
 			sep = "\\";
 			logfile = options.supervise  + "\\app.log";
+		} else if (fs.existsSync(options.supervise  + "\\lisk.log", fs.F_OK)) {
+			logger.info(`Found log file "${options.supervise}\\lisk.log"`);
+			sep = "\\";
+			logfile = options.supervise  + "\\lisk.log";
+		} else if (fs.existsSync(options.supervise  + "/lisk.log", fs.F_OK)) {
+			logger.info(`Found log file "${options.supervise}/lisk.log"`);
+			logfile = options.supervise  + "/lisk.log";
+		} else if (fs.existsSync(options.supervise  + "/logs/lisk.log", fs.F_OK)) {
+			logger.info(`Found log file "${options.supervise}/logs/lisk.log"`);
+			logfile = options.supervise  + "/logs/lisk.log";	
 		} else {
 			logger.error(`"${options.supervise}" is not a valid lisk path (no app.log found)`);
 			process.exit(10);
