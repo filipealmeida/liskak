@@ -9,6 +9,8 @@ After configuration, the following examples perform a donation to the address **
 
 Thank you all and go Lisk go!
 
+![LiskAK proposed setup for monitoring](https://github.com/filipealmeida/liskak/blob/master/docs/liskak_proposed_setup.jpg)
+
 # Foreword
 Last weekend, while educating a couple of individuals on javascript, they started asking a lot of questions on how to achieve many things in nodejs.
 
