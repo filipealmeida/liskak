@@ -1,10 +1,11 @@
 "use strict";
 const REQUIRED_CONFIG_KEYS = ['secret', 'host', 'port', 'proto'];
 const NODE_POLLING_INTERVAL = 10000;
-const NODE_MIN_CONSENSUS = 0;
+const NODE_MIN_CONSENSUS_PERCENT = 0;
+const NODE_MIN_CONSENSUS_SAMPLES = 10;
 const API_REQUEST_TIMEOUT = 0;
 const NODE_MAX_FAILURES = 10;
-const NODE_MAX_BLOCK_DELAY = 3;
+const NODE_MAX_BLOCK_DELAY = 5;
 const LISK_MAX_VOTES = 101;
 const LISK_MAX_BALLOTS = 33;
 const MAX_INMEMORY_DELEGATE_PAGES = 10;
@@ -48,11 +49,12 @@ var options = stdio.getopt({
 	'multitransfer': {    key: 'm', args: '*', description: 'Transfer LSK to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...' },
 	'multilsktransfer': { key: 'M', args: '*', description: 'Transfer LSK^-8 to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...' },
 	'failoverMonkey': {   key: 'f', args: '*', description: 'Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures'},
+	'measureOnSyncOnly': {key: 'Z', args: 0, description: 'Takes measures of consensus only while syncing'},
 	'supervise': {        key: 'S', args: 1, description: 'Provide lisk path to manage lisk process locally (handles fork3, etc.)'},
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
 	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
 	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, default is disabled (0)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
-	'consensus': {        key: 'Q', args: 1, description: 'Broadhash consensus threshold, reload if under value for two consecutive samples', default: NODE_MIN_CONSENSUS},
+	'consensus': {        key: 'Q', args: 2, description: 'Broadhash consensus threshold (%), reload if under value for N consecutive samples', default: [NODE_MIN_CONSENSUS_PERCENT,NODE_MIN_CONSENSUS_SAMPLES]},
 	'inadequateBroadhash': {  key: 'q', args: 0, description: 'Restart on "Inadequate broadhash consensus" message'},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
 	'apiRequestTimeout': {key: 'w', args: 1, description: 'API request timeout, 0 means disabled', default: API_REQUEST_TIMEOUT},
@@ -67,7 +69,9 @@ options.minutesWithoutBlock = parseInt(options.minutesWithoutBlock);
 options.maxFailures = parseInt(options.maxFailures);
 options.maxBlocksDelayed = parseInt(options.maxBlocksDelayed);
 options.pollingInterval = parseInt(options.pollingInterval);
-options.consensus = parseInt(options.consensus);
+//options.consensus = parseInt(options.consensus);
+var consensusMinPercent = parseInt(options.consensus[0]);
+var consensusSampleNum  = parseInt(options.consensus[1]);
 if (options.testMode === true) {
 	options.logLevel = "silly";
 } 
@@ -191,7 +195,16 @@ var liskak = function(_config, _options) {
 		'disabled': 0,
 		'active': 0,
 		'stale': 0,
-		'height': 0
+		'height': 0,
+		'consensus': 100,
+		'score': 0,
+		'status_height': 0,
+		'status_blocks': 0,
+		'status_consensus': 0,
+		'consensus_average': NaN,
+		'syncing': false,
+		'blocks': [],
+		'consensus': []
 	};
 	var defaultOptions = {
 		'hostname': _config["host"],
@@ -271,12 +284,20 @@ var liskak = function(_config, _options) {
 	//TODO: more salad...
 	var stats = function(key, value) {
 		if (key !== undefined) {
-			if (value === undefined) {
-				_stats[key] = (_stats[key] === undefined)?1:_stats[key] + 1;
-			}
 			switch(key) {
 				case "failure":
+				case "consecutiveFailures":
 					_stats["consecutiveFailures"] += 1;
+					_stats["failure"] = 1;
+					break;
+				case "score":
+				    _stats["score"] = (value === undefined)?(_stats["score"] + 1):value;
+					break;
+				case "enabled":
+				    _stats["enabled"] = 1;
+					break;
+				case "disabled":
+				    _stats["disabled"] = 1;
 					break;
 				case "height":
 					if (_stats["height"] == value) {
@@ -285,11 +306,10 @@ var liskak = function(_config, _options) {
 						_stats["stale"] = 0;
 					}
 					_stats["height"] = value;
+				default:
+					_stats[key] = value;
 					_stats["consecutiveFailures"] = 0;
 					_stats["failure"] = 0;
-					break;
-				default:
-					_stats["consecutiveFailures"] = 0;
 					_stats["successes"] += 1;
 					break;
 			}
@@ -299,6 +319,25 @@ var liskak = function(_config, _options) {
 					break;
 				case "enabled":
 					_stats["disabled"] = 0;
+					break;
+				case "status_consensus":
+					_stats["consensus"].push(value);
+					while (_stats["consensus"].length > consensusSampleNum) {
+						_stats["consensus"].shift();
+					}
+					var sum = 0;
+					for (var n = 0; n < _stats["consensus"].length; n++) {
+						sum += _stats["consensus"][n];
+					}
+					if (_stats["consensus"].length >= consensusSampleNum -1) {
+						_stats["consensus_average"] = sum / _stats["consensus"].length;
+					}
+					break;
+				case "status_blocks":
+					_stats["blocks"].push(value);
+					while (_stats["blocks"].length > consensusSampleNum) {
+						_stats["blocks"].shift();
+					}
 					break;
 			}
 		}
@@ -409,7 +448,7 @@ var liskak = function(_config, _options) {
 
         if (_options.apiRequestTimeout > 0) {
                request.setTimeout(_options.apiRequestTimeout, function(){
-                        this.abort();
+                this.abort();
                }.bind(request));
         }
 
@@ -920,11 +959,11 @@ if (options.supervise || options.logfile || options.liskscript) {
 									consensusSum += consensusItems[n];
 								}
 								currentConsensus = consensusSum / consensusItems.length;
-								if (currentConsensus < options.consensus) {
-									logger.error(`Broadhash consensus average of two samples is ${currentConsensus}, under ${options.consensus}, issuing restart`);
+								if (currentConsensus < consensusMinPercent) {
+									logger.error(`Broadhash consensus average of two samples is ${currentConsensus}, under ${consensusMinPercent}, issuing restart`);
 									action = "restart";
 								}
-								if (consensusItems.length > 1) {
+								if (consensusItems.length > consensusSampleNum) {
 									consensusItems.shift();
 								}
 							}
@@ -1038,27 +1077,32 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 			var runtime = configuration[element]['runtime'];
 			runtime.node("open").then(
 				function (data) {
-					runtime.node("forgeStatus").then(
-						function (data) {
-							if (data.success === true) {
-								runtime.stats("alive");
-								if (data.enabled === true) {
-									logger.debug(`Forging ENABLED at ${element}`);
-									logger.debug(runtime.stats("enabled"));
+					if (options.testMode !== true) {
+						runtime.node("forgeStatus").then(
+							function (data) {
+								if (data.success === true) {
+									runtime.stats("alive");
+									if (data.enabled === true) {
+										logger.debug(`Forging ENABLED at ${element}`);
+										logger.debug(runtime.stats("enabled"));
+									} else {
+										logger.debug(`Forging DISABLED at ${element}`);
+										logger.debug(runtime.stats("disabled"));
+									}
 								} else {
-									logger.debug(`Forging DISABLED at ${element}`);
-									logger.debug(runtime.stats("disabled"));
+									logger.error(`Could not get forging status from host ${element}`);
+									logger.debug(runtime.stats("failure"));
 								}
-							} else {
-								logger.error(`Could not get forging status from host ${element}`);
+							},
+							function(err) {
+								logger.error(err);
 								logger.debug(runtime.stats("failure"));
 							}
-						},
-						function(err) {
-							logger.error(err);
-							logger.debug(runtime.stats("failure"));
-						}
-					);
+						);
+					} else { //testing
+						logger.silly(`Forging DISABLED at ${element} *** TESTMODE ***`);
+						logger.debug(runtime.stats("disabled"));
+					}
 				},
 				function(err) {
 					logger.error(err);
@@ -1069,7 +1113,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 			runtime.node("getHeight").then(
 				function (data) {
 					if (data.success === true) {
-						logger.info(`Node ${element} reports height ${data.height}`);
+						logger.debug(`Node ${element} reports height ${data.height}`);
 						runtime.stats("height", data.height);
 					} else {
 						logger.error(`Unable to get block height from host ${element}`);
@@ -1081,96 +1125,169 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					logger.debug(runtime.stats("failure"));
 				}
 			);
+
+			runtime.node("status").then(
+				function (data) {
+					if (data.success === true) {
+						logger.debug(`Node ${element} status height ${data.height}`);
+						runtime.stats("status_height", data.height);
+						if ((data.syncing === true) && (options.measureOnSyncOnly === true)) {
+							runtime.stats("status_consensus", data.consensus);
+							runtime.stats("status_blocks", data.blocks);
+						} else if (options.measureOnSyncOnly === undefined) {
+							runtime.stats("status_consensus", data.consensus);
+							runtime.stats("status_blocks", data.blocks);
+						}
+						runtime.stats("syncing", data.syncing);
+						runtime.stats("broadhash", data.broadhash);
+					} else {
+						logger.error(`Unable to get sync status from host ${element}`);
+						runtime.stats("failure");
+					}
+				},
+				function(err) {
+					logger.error(err);
+					logger.debug(runtime.stats("failure"));
+				}
+			);
 		});
 	}, options.pollingInterval);
+	
+	//TODO: Refactor to support decent scoring system, stats fn above needs major rethinking... but so does this code
 	var intForgeMonitor = setInterval(function () {
 		logger.info(`Evaluation cycle ${monitorIteration}`);
 		monitorIteration++;
-		//TODO: there are better ways to deal with this than this way
-		var spare = [];
-		var alive = [];
-		var dead  = [];
-		var stale = [];
-		var bestBlock = undefined;
-		var nodeWithBestBlockHeight = undefined;
-		var nodeForging = undefined;
-		var nodeEnable = undefined;
-		var nodeDisable = [];
+		var scoreArray = [];
+		var nodesForging = [];
+		//check all node stats
 		Object.keys(configuration).forEach(function(element, key, _array) {
 			var runtime = configuration[element]['runtime'];
 			var stats = runtime.stats();
-			if (stats.failure > options.maxFailures) {
-				logger.warn(`Reporting failure at node ${element}, ${stats.failure} consecutive failures`);
-				runtime.stats("disabled");
-				dead.push(element);
-			} else {
-				if (stats.enabled > 0) {
-					logger.info(`${element} has forging ENABLED`);
-					alive.push(element);
-					nodeForging = element;
-					if (bestBlock === undefined) {
-						bestBlock = stats.height;
-						nodeWithBestBlockHeight = nodeForging;
-					}
-				}
-				if (stats.disabled > 0) {
-					logger.info(`${element} has forging DISABLED`);
-					spare.push(element);
-				}
-				if (stats.stale > options.maxBlocksDelayed) {
-					stale.push(element);
-					logger.warn(`No blocks at ${element} since height ${stats.height}, ${stats.stale * options.pollingInterval / 1000}s ago`);
-				}
-				if ((bestBlock === undefined) || (bestBlock + options.maxBlocksDelayed < stats.height)) {
-					bestBlock = stats.height;
-					nodeWithBestBlockHeight = element;
-				}
+			runtime.stats("score",0);
+			if (stats.enabled > 0) {
+				nodesForging.push(element);
 			}
+			logger.debug(`*** ${element} stats before: ${JSON.stringify(stats)}`);
+			if ((stats.failure === 0) && (consensusMinPercent < stats.consensus_average)){
+				scoreArray.push({element,stats,runtime});
+			} else if (consensusMinPercent > stats.consensus_average) {
+				runtime.stats("score",-3);
+			}
+			if (stats.failure > 0) {
+				runtime.stats("score",-7);
+			} 
 		});
 
-		if (monitorIteration > 3) {
-			logger.warn(`Node with the most recent blocks is ${nodeWithBestBlockHeight}(${bestBlock})`);
-			if ((nodeWithBestBlockHeight !== undefined) && (nodeForging !== undefined) && (nodeWithBestBlockHeight != nodeForging)) {
-				logger.warn(`Node with best block height differs from active node ${nodeWithBestBlockHeight} - ${nodeForging}`);
-				nodeDisable.push(nodeForging);
-				nodeEnable = nodeWithBestBlockHeight;
+		var bhArray = scoreArray.sort((a,b) => {
+			return b.stats.height - a.stats.height; 
+		});
+		var bestHeight = (bhArray.length <= 0)?undefined:bhArray.shift().element;
+		if (bestHeight !== undefined) {
+			configuration[bestHeight]['runtime'].stats("score");
+		}
+		
+		var bcArray = scoreArray.sort((a,b) => {
+			return b.stats.consensus_average - a.stats.consensus_average; 
+		});
+		var bestConsensus = (bcArray.length <= 0)?undefined:bcArray.shift().element;
+		if (bestConsensus !== undefined) {
+			configuration[bestConsensus]['runtime'].stats("score");
+		}
+
+		scoreArray = [];
+		Object.keys(configuration).forEach(function(element, key, _array) {
+			var runtime = configuration[element]['runtime'];
+			var stats = runtime.stats();
+			if ((bestHeight !== undefined) && (element !== bestHeight) && (stats.height + options.maxBlocksDelayed >= configuration[bestHeight]['runtime'].stats().height)) {
+				runtime.stats("score");
 			}
-			if (alive.length > 1) {
-				logger.warn("Forging enabled at more than one node, leaving just one enabled");
-				for (var i = 1; i < alive.length; i++) {
-					logger.warn(`Prepare to stop forging at ${alive[i]}`);
-					nodeDisable.push(alive[i]);
-				}
+			//specially dubious
+			if ((bestHeight !== undefined) && (element !== bestHeight) && (stats.height + options.maxBlocksDelayed < configuration[bestHeight]['runtime'].stats().height)) {
+				runtime.stats("score",-5);
 			}
-			if ((alive.length < 1) && (nodeForging === undefined)) {
-				logger.warn("No enabled forging anywhere, preparing enabling at best node");
-				nodeEnable = (nodeWithBestBlockHeight === undefined)?spare[0]:nodeWithBestBlockHeight;
+			//decide this with stddev
+			if ((bestConsensus !== undefined) && (element !== bestConsensus) && (stats.consensus_average >= consensusMinPercent * 0.5)) {
+				runtime.stats("score");
 			}
 
-			if (nodeDisable.length > 0) {
-				for (var i = 0; i < nodeDisable.length; i++) {
-					logger.warn(`Disabling forging at ${nodeDisable[i]}`);
-					var runtime = configuration[nodeDisable[i]]['runtime'];
-					runtime.node("forgeDisable").then(defaultDisplay, logger.error);
+			logger.debug(`*** ${element} stats after: ${JSON.stringify(stats)}`);
+			scoreArray.push({element,stats,runtime});
+			logger.info(`Stats for ${element}: height: ${stats.height}, consensus: ${stats.consensus_average}, score: ${stats.score}`);
+		});
+
+		var bsArray = scoreArray.sort((a,b) => {
+			return b.stats.score - a.stats.score; 
+		});
+		var bestNode = (bsArray.length <= 0)?undefined:bsArray.shift().element;
+
+
+
+
+		/*
+		1. If consecutive API call failures are more than maxFailures (-F), force switch
+		2. If difference to best node more than maxBlocksDelayed (-D), score badly, switch most probable
+		3. If node is stale and over minutesWithoutBlock (-B), redundant, supervise won't let this happen
+		4. If node consensus (flag: -Q) under consensusMinPercent for consensusSampleNum samples, score badly, switch most probable
+		5. If more than one node forging, leave only the best one forging (based on blockheight and consensus percentange)
+		6. If no nodes forging, select best one and enable forge (based on blockheight and consensus percentange)
+		 */
+		if (monitorIteration > 3) {
+			var bestChoice = bestNode || bestConsensus || bestHeight;
+			if (bestChoice === undefined) {
+				logger.warn("Couldn't select any node for forging, possible blackout");
+			} else {
+				if (nodesForging.length > 1) {
+					logger.warn("Forging enabled at more than one node, disabling all for best selection");
+					for (var i = 0; i < nodesForging.length; i++) {
+						logger.warn(`Prepare to stop forging at ${nodesForging[i]}`);
+						var runtime = configuration[nodesForging[i]]['runtime'];
+						runtime.node("forgeDisable").then(defaultDisplay, logger.error);
+					}
+				} else if (nodesForging.length === 1) { //Switch possible with only one node forging
+					var runtime = configuration[nodesForging[0]]['runtime'];
+					var stats = runtime.stats();
+					logger.debug(`Forging is ${nodesForging[0]}`);
+					logger.debug(`bestHeight is ${bestHeight}`);
+					logger.debug(`bestConsensus is ${bestConsensus}`);
+					logger.debug(`bestNode is ${bestNode}`);
+					logger.debug(`bestChoice is ${bestNode}`);
+					if (stats.consecutiveFailures > options.maxFailures) {
+						runtime.stats("disabled");
+						logger.error(`Marking ${nodesForging[0]} as disabled, ${stats.consecutiveFailures} consecutive failures registered`);
+					}
+					if ((nodesForging[0] === bestChoice) && (stats.score == configuration[bestChoice]['runtime'].stats().score)) {
+						logger.info(`Forging is at ${nodesForging[0]} (height: ${stats.height}, consensus: ${stats.consensus_average}, score: ${stats.score})`);
+					} else if (configuration[bestChoice]['runtime'].stats().score > stats.score){
+						//TODO: make sure height is best, this is poor scoring above, review again!!
+						var bestChoiceRuntime = configuration[bestChoice]['runtime'];
+						var bestChoiceStats = bestChoiceRuntime.stats();
+						if (bestChoiceStats.height + options.maxBlocksDelayed < stats.height) {
+							logger.warn(`Found better node, but not switching due to delayed blocks, keeping ${nodesForging[0]}`);							
+						} else {
+							logger.warn(`Found better node, switching ${nodesForging[0]} to ${bestChoice}`);
+							logger.debug(`${stats.score} ${configuration[bestChoice]['runtime'].stats().score}`);
+							runtime.node("forgeDisable").then(
+								function(data) {
+									var nextNode = configuration[bestChoice]['runtime'];
+									defaultDisplay(data);
+									nextNode.node("forgeEnable").then(defaultDisplay, logger.error);
+								}, 
+								logger.error);
+						}
+					} else {
+						logger.info(`Forging is at ${nodesForging[0]} (height: ${stats.height}, consensus: ${stats.consensus_average}, score: ${stats.score}) +`);
+					}
+
+				} else if (nodesForging.length === 0) {
+					if (bestChoice === undefined) {
+						logger.error(`No nodes eligible for forging, waiting for availability`);
+					} else {
+						logger.warn(`No nodes forging, will try and enable at ${bestChoice}.`);
+						var runtime = configuration[bestChoice]['runtime'];
+						runtime.node("forgeEnable").then(defaultDisplay, logger.error);
+					}
 				}
 			}
-			if (nodeEnable !== undefined) {
-				logger.warn(`Enabling forging at ${nodeEnable}`);
-				var runtime = configuration[nodeEnable]['runtime'];
-				runtime.node("forgeEnable").then(defaultDisplay, logger.error);
-			}
-		}
-		if (nodeWithBestBlockHeight === undefined) {
-        		for (var idx = 0; idx < options.failoverMonkey.length; idx++) {
-                		var u = url.parse(options.failoverMonkey[idx]);
-                		var setup = JSON.parse(JSON.stringify(config));
-                		setup.host = u['hostname'];
-                		setup.port = u['port'];
-                		setup.protocol = u['protocol'].substr(0, u['protocol'].indexOf(":"));
-                		logger.info(`Enabling monitor for node ${options.failoverMonkey[idx]}`);
-                		configuration[u.href] = {};
-                		configuration[u.href]['runtime'] = new liskak(setup, options);
-        		}
 		}
 	}, options.pollingInterval);
 }

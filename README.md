@@ -66,52 +66,64 @@ You can always run issuing "node src/liskak.js ARGS"
 someuser@foo:~/liskak$ ./liskak.sh --help
 USAGE: node liskak.js [OPTION1] [OPTION2]... arg1 arg2...
 The following options are supported:
-  -c, --configuration <ARG1>            Path to the configuration json file (defaults to ./liskak.json)
-  -i, --info                            Displays your account info
-  -N, --newAccount                      Creates a new account
-  -b, --balance <ARG1>                  Displays an account's balance
-  -d, --getHeight                       Get block height
-  -L, --logLevel <ARG1>                 Logging level, one of: error, warn, info verbose, debug, silly ("info" by default)
-  -l, --listVotes <ARG1>                Lists your votes
-  -I, --upvote <ARG1>                   Vote for delegates in file specified
-  -O, --downvote <ARG1>                 Remove vote from delegates in file specified
-  -C, --checkVotes                      Checks current votes, compares with upvote/downvote data in files (flags -I and -O)
-  -A, --commitVotes                     Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list
-  -v, --voteForIrondizzy                Allow a spare voting slot to go to "hmachado"
-  -y, --isForging                       Test if forging
-  -Y, --enableForging                   Enable forging
-  -W, --disableForging                  Disable forging
-  -z, --status                          Reports on sync status of node
-  -s, --donate <ARG1>                   Donate LSK to this great cause, default: 5
-  -t, --transfer <ARG1> <ARG2>          Transfer LSK to an address from your configured account: -t LSK ADDRESS
-  -T, --lsktransfer <ARG1> <ARG2>       Transfer LSK^-8 to an address from your configured account: -t LSK ADDRESS
-  -m, --multitransfer <ARG1>...<ARGN>   Transfer LSK to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
-  -M, --multilsktransfer <ARG1>..<ARGN> Transfer LSK^-8 to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
-  -f, --failoverMonkey <ARG1>...<ARGN>  Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
-  -S, --supervise <ARG1>                Provide lisk path to manage lisk process locally (handles fork3, etc.)
-  -K, --liskscript <ARG1>               Provide absolute path for lisk script: lisk.sh for operations (supervise implied)
-  -J, --logfile <ARG1>                  Provide absolute path for lisk logfile (supervise implied)
-  -P, --pollingInterval <ARG1>          Interval between node polling in milliseconds ("10000" by default)
-  -B, --minutesWithoutBlock <ARG1>    	Minutes without blocks before issuing a rebuild, default is disabled (0)
-  -w, --apiRequestTimeout <ARG1>        API request timeout, 0 means disabled
-  -F, --maxFailures <ARG1>              Maximum failures tolerated when chatting with lisk nodes ("10" by default)
-  -D, --maxBlocksDelayed <ARG1>         Maximum number of block difference between nodes before change forging node ("3" by default)
+  -c, --configuration <ARG1>            	Path to the configuration json file (defaults to ./liskak.json)
+  -i, --info                            	Displays your account info
+  -N, --newAccount                      	Creates a new account
+  -b, --balance <ARG1>                  	Displays an account's balance
+  -d, --getHeight                       	Get block height
+  -L, --logLevel <ARG1>                 	Logging level, one of: error, warn, info verbose, debug, silly ("info" by default)
+  -l, --listVotes <ARG1>                	Lists your votes
+  -I, --upvote <ARG1>                   	Vote for delegates in file specified
+  -O, --downvote <ARG1>                 	Remove vote from delegates in file specified
+  -C, --checkVotes                      	Checks current votes, compares with upvote/downvote data in files (flags -I and -O)
+  -R, --replaceVotes                    	Set the upvotes exactly as provided by the upvote list from -I flag
+  -A, --commitVotes                     	Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list
+  -v, --voteForIrondizzy                	Allow a spare voting slot to go to "hmachado"
+  -y, --isForging                       	Test if forging
+  -Y, --enableForging                   	Enable forging
+  -W, --disableForging                  	Disable forging
+  -z, --status                          	Reports on sync status of node
+  -s, --donate <ARG1>                   	Donate LSK to this great cause, default: 5
+  -t, --transfer <ARG1> <ARG2>          	Transfer LSK to an address from your configured account: -t LSK ADDRESS
+  -T, --lsktransfer <ARG1> <ARG2>       	Transfer LSK^-8 to an address from your configured account: -T LSK ADDRESS
+  -m, --multitransfer <ARG1>...<ARGN>   	Transfer LSK to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
+  -M, --multilsktransfer <ARG1>...<ARGN>	Transfer LSK^-8 to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
+  -f, --failoverMonkey <ARG1>...<ARGN>  	Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
+  -Z, --measureOnSyncOnly               	Takes measures of consensus only while syncing
+  -S, --supervise <ARG1>                	Provide lisk path to manage lisk process locally (handles fork3, etc.)
+  -K, --liskscript <ARG1>               	Provide absolute path for lisk script: lisk.sh for operations (supervise implied)
+  -J, --logfile <ARG1>                  	Provide absolute path for lisk logfile (supervise implied)
+  -B, --minutesWithoutBlock <ARG1>      	Minutes without blocks before issuing a rebuild, default is disabled (0)
+  -Q, --consensus <ARG1> <ARG2>         	Broadhash consensus threshold (%), reload if under value for N consecutive samples ("0,10" by default)
+  -q, --inadequateBroadhash             	Restart on "Inadequate broadhash consensus" message
+  -P, --pollingInterval <ARG1>          	Interval between node polling in milliseconds ("10000" by default)
+  -w, --apiRequestTimeout <ARG1>        	API request timeout, 0 means disabled
+  -F, --maxFailures <ARG1>              	Maximum failures tolerated when chatting with lisk nodes ("10" by default)
+  -D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("3" by default)
 
 ```
 
 # Usage examples
 
 ### Failover forging and node monitoring
-Failover to other delegate node occurs if one of the following conditions occur:
-1. If the blockheight is inferior by 3 on the active nodes, the one with higher blockheight takes over (edit code to change constant).
-2. If the active forging node is missing or fails answering 10 Lisk Army Knive questions, other takes over (edit code to change constant).
-3. If none has active forging, one takes over.
-4. If more than one has active forging, only one will be left with forging enabled.
+LiskAK running with the failoverMonkey flag will always try to have forging enabled at the best possible node according to the criteria below:
+
+1. If consecutive API call failures are more than maxFailures (-F), force switch
+2. If difference to best node more than maxBlocksDelayed (-D), score badly, increased probability of switching to other node
+3. If node consensus (flag: -Q) under consensusMinPercent for consensusSampleNum samples, score badly, increased probability of switching to other node
+4. If more than one node forging, leave only the best one forging (based on blockheight and consensus percentange)
+5. If no nodes forging, select best one and enable forge (based on blockheight and consensus percentange)
+
+***NOTE #0:*** This is EXPERIMENTAL code and it was already nimble enough, if you run into trouble, checkout 82ef27cb3f803693b466938852071dafb117fabc
+***NOTE #1:*** In failover mode, -Z flag will measure consensus for -Q flag only when node is syncing (versus all the time from status API call) 
+***NOTE #2:*** Consensus will show NaN if the number of samples with -Q hasn't been reached yet 
+
+
 
 Example:
 
 ```
-someuser@foo:~/liskak$ ./liskak.sh -f https://NODE1:8001 https://NODE2:8001
+someuser@foo:~/liskak$ ./liskak.sh -f https://NODE1:8001 https://NODE2:8001 -P 5000 -w 5000 -Q 50 6 -Z
 2016-05-28T11:27:03.731Z INFO Failover monkey starting: ["https://NODE1:8001","https://NODE2:8001"]
 2016-05-28T11:27:03.737Z INFO Enabling monitor for node https://NODE1:8001
 2016-05-28T11:27:03.750Z INFO Enabling monitor for node https://NODE2:8001
