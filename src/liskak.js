@@ -889,8 +889,12 @@ if (options.supervise || options.logfile || options.liskscript) {
 		var action = undefined;
 		var syncStarted = undefined;
 		//TODO: Time to rewrite liskak! 
-		
-		logger.info(`Setting up rebuild on no blocks after ${options.minutesWithoutBlock} minutes timer.`);
+		if (options.timeSinceLastStart > 0) {
+			logger.info(`Setting up rebuild on no blocks if ${options.minutesWithoutBlock} minutes without blocks.`);
+		}
+		if (options.minutesWithoutBlock > 0) {
+			logger.info(`Setting up restart after ${options.reloadSchedule} minutes.`);
+		}
 		var intForgeTicks = setInterval(function () {
 			if (options.minutesWithoutBlock > 0) {
 				var timeSinceLastBlock = (new Date()).getTime() - lastBlockTime;
