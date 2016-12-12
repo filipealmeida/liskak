@@ -2,6 +2,7 @@
 const REQUIRED_CONFIG_KEYS = ['secret', 'host', 'port', 'proto'];
 const NODE_POLLING_INTERVAL = 10000;
 const NODE_MIN_CONSENSUS_PERCENT = 0;
+const SWITCH_CONFIRMATIONS = 3;
 const NODE_MIN_CONSENSUS_SAMPLES = 10;
 const API_REQUEST_TIMEOUT = 0;
 const NODE_MAX_FAILURES = 10;
@@ -36,7 +37,7 @@ var options = stdio.getopt({
 	'upvote': {           key: 'I', args: 1, description: 'Vote for delegates in file specified'},
 	'downvote': {         key: 'O', args: 1, description: 'Remove vote from delegates in file specified'},
 	'checkVotes': {       key: 'C', args: 0, description: 'Checks current votes, compares with upvote/downvote data in files (flags -I and -O)'},
-	'replaceVotes': {     key: 'R', args: 0, description: 'Set the upvotes exactly as provided by the upvote list from -I flag'},
+	'replaceVotes': {     key: 'r', args: 0, description: 'Set the upvotes exactly as provided by the upvote list from -I flag'},
 	'commitVotes': {      key: 'A', args: 0, description: 'Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list'},
 	'voteForIrondizzy': { key: 'v', args: 0, description: 'Allow a spare voting slot to go to "hmachado"' },
 	'isForging': {        key: 'y', args: 0, description: 'Test if forging'},
@@ -50,12 +51,14 @@ var options = stdio.getopt({
 	'multilsktransfer': { key: 'M', args: '*', description: 'Transfer LSK^-8 to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...' },
 	'failoverMonkey': {   key: 'f', args: '*', description: 'Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures'},
 	'measureOnSyncOnly': {key: 'Z', args: 0, description: 'Takes measures of consensus only while syncing'},
+	'switchConfirmation':{key: 'E', args: 1, description: 'Wait for N cycles before switching', default: SWITCH_CONFIRMATIONS},
 	'supervise': {        key: 'S', args: 1, description: 'Provide lisk path to manage lisk process locally (handles fork3, etc.)'},
 	'liskscript': {       key: 'K', args: 1, description: 'Provide absolute path for lisk script: lisk.sh for operations (supervise implied)'},
 	'logfile': {          key: 'J', args: 1, description: 'Provide absolute path for lisk logfile (supervise implied)'},
 	'minutesWithoutBlock': {  key: 'B', args: 1, description: 'Minutes without blocks before issuing a rebuild, default is disabled (0)', default: MINUTES_WITH_NO_BLOCKS_BEFORE_REBUILDING},
 	'consensus': {        key: 'Q', args: 2, description: 'Broadhash consensus threshold (%), reload if under value for N consecutive samples', default: [NODE_MIN_CONSENSUS_PERCENT,NODE_MIN_CONSENSUS_SAMPLES]},
 	'inadequateBroadhash': {  key: 'q', args: 0, description: 'Restart on "Inadequate broadhash consensus" message'},
+	'reloadSchedule': {   key: 'R', args: 1, description: 'Restart after N minutes if not forging, supervise only, 0 means disabled', default: 0},
 	'pollingInterval': {  key: 'P', args: 1, description: 'Interval between node polling in milliseconds', default: NODE_POLLING_INTERVAL},
 	'apiRequestTimeout': {key: 'w', args: 1, description: 'API request timeout, 0 means disabled', default: API_REQUEST_TIMEOUT},
 	'maxFailures': {      key: 'F', args: 1, description: 'Maximum failures tolerated when chatting with lisk nodes', default: NODE_MAX_FAILURES},
@@ -69,6 +72,8 @@ options.minutesWithoutBlock = parseInt(options.minutesWithoutBlock);
 options.maxFailures = parseInt(options.maxFailures);
 options.maxBlocksDelayed = parseInt(options.maxBlocksDelayed);
 options.pollingInterval = parseInt(options.pollingInterval);
+options.switchConfirmation = parseInt(options.switchConfirmation);
+options.reloadSchedule = parseInt(options.reloadSchedule);
 //options.consensus = parseInt(options.consensus);
 var consensusMinPercent = parseInt(options.consensus[0]);
 var consensusSampleNum  = parseInt(options.consensus[1]);
@@ -805,6 +810,7 @@ function readLines(input, func) {
 if (options.supervise || options.logfile || options.liskscript) {
 	var exec = require('child_process').exec;
 	var lastBlockTime = (new Date()).getTime();
+	var lastStartTime = (new Date()).getTime();
 	function puts(error, stdout, stderr) { sys.puts(stdout) }
 
 	var logfile = undefined;
@@ -883,9 +889,10 @@ if (options.supervise || options.logfile || options.liskscript) {
 		var action = undefined;
 		var syncStarted = undefined;
 		//TODO: Time to rewrite liskak! 
-		if (options.minutesWithoutBlock > 0) {
-			logger.info(`Setting up rebuild on no blocks after ${options.minutesWithoutBlock} minutes timer.`);
-			var intForgePolling = setInterval(function () {
+		
+		logger.info(`Setting up rebuild on no blocks after ${options.minutesWithoutBlock} minutes timer.`);
+		var intForgeTicks = setInterval(function () {
+			if (options.minutesWithoutBlock > 0) {
 				var timeSinceLastBlock = (new Date()).getTime() - lastBlockTime;
 				logger.info(`No blocks for ${timeSinceLastBlock} ms`);
 				if (timeSinceLastBlock > 1000 * 60 * options.minutesWithoutBlock) {
@@ -894,8 +901,20 @@ if (options.supervise || options.logfile || options.liskscript) {
 					lastBlockTime = (new Date()).getTime();
 					t.emit("line", "No blocks, do something!");
 				}
-			}, 60000);
-		}
+			}
+			if (options.reloadSchedule > 0) {
+				var timeSinceLastStart = (new Date()).getTime() - lastStartTime;
+				if (timeSinceLastStart > 1000 * 60 * options.reloadSchedule) {
+					//check if forging before restart
+					logger.warn(`Restart schedule is on, last start was ${timeSinceLastStart/60000} minutes ago, issuing restart.`);
+					action = "restart";
+					lastStartTime = (new Date()).getTime();
+					t.emit("line", "Schedule time reached, reload!");
+				}
+			}
+			logger.debug("Tick minute");
+		}, 60000);
+
 		//TODO: check tail of message string, parse of message requires revision
 		//TODO: only acts after a new match, revision to speed up log message recog
 		t.on("line", function(data) {
@@ -947,6 +966,15 @@ if (options.supervise || options.logfile || options.liskscript) {
 				message = matches[5];
 				if (message !== "") {
 					switch (verb) {
+						case "Lisk":
+							//[inf] 2016-12-04 22:55:21 | Lisk started: 0.0.0.0:8000
+							var smatch;
+							if (smatch = message.match(/(\w+)/)) {
+								if (smatch[0] === "started") {
+									lastStartTime = (new Date()).getTime();
+								}
+							}
+							break;
 						case "Broadhash":
 							var bhmatch;
 							if (bhmatch = message.match(/(\d+)/)) {
@@ -1153,6 +1181,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 		});
 	}, options.pollingInterval);
 	
+	var switchList = [];
 	//TODO: Refactor to support decent scoring system, stats fn above needs major rethinking... but so does this code
 	var intForgeMonitor = setInterval(function () {
 		logger.info(`Evaluation cycle ${monitorIteration}`);
@@ -1169,13 +1198,13 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 			}
 			logger.debug(`*** ${element} stats before: ${JSON.stringify(stats)}`);
 			if ((stats.failure === 0) && (consensusMinPercent < stats.consensus_average)){
-				scoreArray.push({element,stats,runtime});
 			} else if (consensusMinPercent > stats.consensus_average) {
 				runtime.stats("score",-3);
 			}
 			if (stats.failure > 0) {
 				runtime.stats("score",-7);
-			} 
+			}
+			scoreArray.push({element,stats,runtime});
 		});
 
 		var bhArray = scoreArray.sort((a,b) => {
@@ -1256,25 +1285,39 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 						logger.error(`Marking ${nodesForging[0]} as disabled, ${stats.consecutiveFailures} consecutive failures registered`);
 					}
 					if ((nodesForging[0] === bestChoice) && (stats.score == configuration[bestChoice]['runtime'].stats().score)) {
+						switchList = [];
 						logger.info(`Forging is at ${nodesForging[0]} (height: ${stats.height}, consensus: ${stats.consensus_average}, score: ${stats.score})`);
 					} else if (configuration[bestChoice]['runtime'].stats().score > stats.score){
 						//TODO: make sure height is best, this is poor scoring above, review again!!
 						var bestChoiceRuntime = configuration[bestChoice]['runtime'];
 						var bestChoiceStats = bestChoiceRuntime.stats();
 						if (bestChoiceStats.height + options.maxBlocksDelayed < stats.height) {
+							switchList = [];
 							logger.warn(`Found better node, but not switching due to delayed blocks, keeping ${nodesForging[0]}`);							
 						} else {
-							logger.warn(`Found better node, switching ${nodesForging[0]} to ${bestChoice}`);
-							logger.debug(`${stats.score} ${configuration[bestChoice]['runtime'].stats().score}`);
-							runtime.node("forgeDisable").then(
-								function(data) {
-									var nextNode = configuration[bestChoice]['runtime'];
-									defaultDisplay(data);
-									nextNode.node("forgeEnable").then(defaultDisplay, logger.error);
-								}, 
-								logger.error);
+							logger.warn(`Found better node, contemplating switching ${nodesForging[0]} to ${bestChoice}`);
+							switchList.push(bestChoice);
+							var canSwitch = false;
+							logger.debug(`Forge requests changes list: ${switchList.join(", ")}`);
+							if (switchList.length >= options.switchConfirmation) {
+								canSwitch = true;
+								for (var n = 0; n < switchList.length; n++) {
+									canSwitch = canSwitch && (bestChoice === switchList[n]);
+								}
+							}
+							if (canSwitch === true) {
+								//TODO this seems too fast for lisk, more forks happening; disabling first, enable at next cycle 
+								runtime.node("forgeDisable").then(
+									function(data) {
+										logger.warn(`Disabled forge at ${nodesForging[0]} to enable next at ${bestChoice} (${JSON.stringify(data)})`);
+									}, 
+									logger.error);
+							} else {
+								logger.warn(`Found better node, making sure of change of ${nodesForging[0]} to ${bestChoice}`);
+							}
 						}
 					} else {
+						switchList = [];
 						logger.info(`Forging is at ${nodesForging[0]} (height: ${stats.height}, consensus: ${stats.consensus_average}, score: ${stats.score}) +`);
 					}
 
@@ -1284,7 +1327,10 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					} else {
 						logger.warn(`No nodes forging, will try and enable at ${bestChoice}.`);
 						var runtime = configuration[bestChoice]['runtime'];
-						runtime.node("forgeEnable").then(defaultDisplay, logger.error);
+						runtime.node("forgeEnable").then(function(data) { 
+							logger.warn(`Enabled forging at ${bestChoice} (${JSON.stringify(data)}).`);
+						}, logger.error);
+						switchList = [];
 					}
 				}
 			}

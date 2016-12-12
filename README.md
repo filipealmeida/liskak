@@ -76,7 +76,7 @@ The following options are supported:
   -I, --upvote <ARG1>                   	Vote for delegates in file specified
   -O, --downvote <ARG1>                 	Remove vote from delegates in file specified
   -C, --checkVotes                      	Checks current votes, compares with upvote/downvote data in files (flags -I and -O)
-  -R, --replaceVotes                    	Set the upvotes exactly as provided by the upvote list from -I flag
+  -r, --replaceVotes                    	Set the upvotes exactly as provided by the upvote list from -I flag
   -A, --commitVotes                     	Executes your voting orders with upvote/downvote data in files (flags -I and -O); check first with -C flag for action list
   -v, --voteForIrondizzy                	Allow a spare voting slot to go to "hmachado"
   -y, --isForging                       	Test if forging
@@ -90,16 +90,18 @@ The following options are supported:
   -M, --multilsktransfer <ARG1>...<ARGN>	Transfer LSK^-8 to a list of addresses from your configured account: -t LSK ADDRESS [ADDRESS] ...
   -f, --failoverMonkey <ARG1>...<ARGN>  	Provide a list of available nodes for forging failover; stays awake and acts on blockchain and connection failures
   -Z, --measureOnSyncOnly               	Takes measures of consensus only while syncing
+  -E, --switchConfirmation <ARG1>       	Wait for N cycles before switching ("3" by default)
   -S, --supervise <ARG1>                	Provide lisk path to manage lisk process locally (handles fork3, etc.)
   -K, --liskscript <ARG1>               	Provide absolute path for lisk script: lisk.sh for operations (supervise implied)
   -J, --logfile <ARG1>                  	Provide absolute path for lisk logfile (supervise implied)
   -B, --minutesWithoutBlock <ARG1>      	Minutes without blocks before issuing a rebuild, default is disabled (0)
   -Q, --consensus <ARG1> <ARG2>         	Broadhash consensus threshold (%), reload if under value for N consecutive samples ("0,10" by default)
   -q, --inadequateBroadhash             	Restart on "Inadequate broadhash consensus" message
+  -R, --reloadSchedule <ARG1>           	Restart after N minutes if not forging, supervise only, 0 means disabled
   -P, --pollingInterval <ARG1>          	Interval between node polling in milliseconds ("10000" by default)
   -w, --apiRequestTimeout <ARG1>        	API request timeout, 0 means disabled
   -F, --maxFailures <ARG1>              	Maximum failures tolerated when chatting with lisk nodes ("10" by default)
-  -D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("3" by default)
+  -D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("5" by default)
 
 ```
 
@@ -117,7 +119,6 @@ LiskAK running with the failoverMonkey flag will always try to have forging enab
 ***NOTE #0:*** This is EXPERIMENTAL code and it was already nimble enough, if you run into trouble, checkout 82ef27cb3f803693b466938852071dafb117fabc
 ***NOTE #1:*** In failover mode, -Z flag will measure consensus for -Q flag only when node is syncing (versus all the time from status API call) 
 ***NOTE #2:*** Consensus will show NaN if the number of samples with -Q hasn't been reached yet 
-
 
 
 Example:
