@@ -811,6 +811,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 	var exec = require('child_process').exec;
 	var lastBlockTime = (new Date()).getTime();
 	var lastStartTime = (new Date()).getTime();
+	var reloadSchedule = options.reloadSchedule;
 	function puts(error, stdout, stderr) { sys.puts(stdout) }
 
 	var logfile = undefined;
@@ -892,8 +893,8 @@ if (options.supervise || options.logfile || options.liskscript) {
 		if (options.minutesWithoutBlock > 0) {
 			logger.info(`Setting up rebuild on no blocks if ${options.minutesWithoutBlock} minutes without blocks.`);
 		}
-		if (options.reloadSchedule > 0) {
-			logger.info(`Setting up restart after ${options.reloadSchedule} minutes.`);
+		if (reloadSchedule > 0) {
+			logger.info(`Setting up restart after ${reloadSchedule} minutes.`);
 		}
 		var intForgeTicks = setInterval(function () {
 			if (options.minutesWithoutBlock > 0) {
@@ -906,9 +907,9 @@ if (options.supervise || options.logfile || options.liskscript) {
 					t.emit("line", "No blocks, do something!");
 				}
 			}
-			if (options.reloadSchedule > 0) {
+			if (reloadSchedule > 0) {
 				var timeSinceLastStart = (new Date()).getTime() - lastStartTime;
-				if (timeSinceLastStart > 1000 * 60 * options.reloadSchedule) {
+				if (timeSinceLastStart > 1000 * 60 * reloadSchedule) {
 					//check if forging before restart
 					logger.warn(`Restart schedule is on, last start was ${timeSinceLastStart/60000} minutes ago, issuing restart.`);
 					action = "restart";
@@ -984,8 +985,14 @@ if (options.supervise || options.logfile || options.liskscript) {
 							var smatch;
 							if (smatch = message.match(/(\w+)/)) {
 								if (smatch[0] === "enabled") {
-									logger.warn(`Forging enabled, time to reload in ${options.reloadSchedule} minutes`);
-									lastStartTime = (new Date()).getTime();
+									logger.warn(`Forging enabled, time to reload is infinity`);
+									reloadSchedule = 0;
+								}
+								if (smatch[0] === "enabled") {
+									reloadSchedule = options.reloadSchedule;
+									var timeNow = (new Date()).getTime();
+									var nextRestart = lastStartTime + reloadSchedule * 60 * 1000 - timeNow;
+									logger.warn(`Forging disabled, reload schedule set for ${options.reloadSchedule} minutes, will occur in ${nextRestart/1000} seconds`);
 								}
 							}
 							break;
