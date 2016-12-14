@@ -913,7 +913,6 @@ if (options.supervise || options.logfile || options.liskscript) {
 					//check if forging before restart
 					logger.warn(`Restart schedule is on, last start was ${timeSinceLastStart/60000} minutes ago, issuing restart.`);
 					action = "restart";
-					lastStartTime = (new Date()).getTime();
 					t.emit("line", "Schedule time reached, reload!");
 				}
 			}
