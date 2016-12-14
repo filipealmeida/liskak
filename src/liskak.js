@@ -988,7 +988,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 									logger.warn(`Forging enabled, time to reload is infinity`);
 									reloadSchedule = 0;
 								}
-								if (smatch[0] === "enabled") {
+								if (smatch[0] === "disabled") {
 									reloadSchedule = options.reloadSchedule;
 									var timeNow = (new Date()).getTime();
 									var nextRestart = lastStartTime + reloadSchedule * 60 * 1000 - timeNow;
