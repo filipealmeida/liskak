@@ -979,6 +979,16 @@ if (options.supervise || options.logfile || options.liskscript) {
 								}
 							}
 							break;
+						case "Forging":
+							//[inf] 2016-12-04 22:55:21 | Lisk started: 0.0.0.0:8000
+							var smatch;
+							if (smatch = message.match(/(\w+)/)) {
+								if (smatch[0] === "enabled") {
+									logger.warn(`Forging enabled, time to reload in ${options.reloadSchedule} minutes`);
+									lastStartTime = (new Date()).getTime();
+								}
+							}
+							break;
 						case "Broadhash":
 							var bhmatch;
 							if (bhmatch = message.match(/(\d+)/)) {
