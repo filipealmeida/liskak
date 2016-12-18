@@ -1008,7 +1008,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 								}
 								currentConsensus = consensusSum / consensusItems.length;
 								if (currentConsensus < consensusMinPercent) {
-									logger.error(`Broadhash consensus average of two samples is ${currentConsensus}, under ${consensusMinPercent}, issuing restart`);
+									logger.error(`Broadhash consensus average of ${consensusSampleNum} samples is ${currentConsensus}, under ${consensusMinPercent}, issuing restart`);
 									action = "restart";
 								}
 								if (consensusItems.length > consensusSampleNum) {
