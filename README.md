@@ -118,16 +118,25 @@ If you run into trouble, checkout 82ef27cb3f803693b466938852071dafb117fabc or us
 Example:
 
 ```
-someuser@foo:~/liskak$ ./liskak.sh -f https://NODE1:8001 https://NODE2:8001 -P 5000 -w 5000 -Q 50 6 -Z
-2016-05-28T11:27:03.731Z INFO Failover monkey starting: ["https://NODE1:8001","https://NODE2:8001"]
-2016-05-28T11:27:03.737Z INFO Enabling monitor for node https://NODE1:8001
-2016-05-28T11:27:03.750Z INFO Enabling monitor for node https://NODE2:8001
-2016-05-28T11:27:41.449Z INFO Probe cycle 0
-2016-05-28T11:27:41.497Z INFO Evaluation cycle 0
-2016-05-28T11:27:51.553Z INFO Probe cycle 1
-2016-05-28T11:27:51.557Z INFO Evaluation cycle 1
-2016-05-28T11:27:51.558Z INFO https://node1:8001/ has forging ENABLED
-2016-05-28T11:27:51.558Z INFO https://node1:8001/ has forging DISABLED
+someuser@foo:~/liskak$ ./liskak.sh -c /home/foo/my_forger_configuration.json -f http://172.17.0.2:8000 http://172.17.0.3:8000 http://172.17.0.4:8000 -P 3000 -w 3000
+2017-01-02T20:43:34.498Z INFO Initializing
+2017-01-02T20:43:34.504Z INFO Failover monkey starting: ["http://172.17.0.2:8000","http://172.17.0.3:8000","http://172.17.0.4:8000"]
+2017-01-02T20:43:34.505Z INFO Enabling monitor for node http://172.17.0.2:8000
+2017-01-02T20:43:34.506Z INFO Enabling monitor for node http://172.17.0.3:8000
+2017-01-02T20:43:34.506Z INFO Enabling monitor for node http://172.17.0.4:8000
+2017-01-02T20:43:37.508Z INFO Probe cycle 0
+2017-01-02T20:43:37.549Z INFO Evaluation cycle 0
+2017-01-02T20:43:37.549Z WARN Server http://172.17.0.3:8000/ removed from forge failover list (syncing or failed)
+2017-01-02T20:43:37.550Z WARN Server http://172.17.0.4:8000/ removed from forge failover list (syncing or failed)
+2017-01-02T20:43:37.550Z INFO Iteration 1: best server is: http://172.17.0.2:8000/
+2017-01-02T20:43:37.550Z INFO Warming up, no action; Forge failover will be active in 2 cycles
+2017-01-02T20:43:37.551Z INFO Forging is ENABLED at http://172.17.0.2:8000/
+......
+2017-01-02T20:44:58.307Z INFO Evaluation cycle 24
+2017-01-02T20:44:58.307Z WARN Server http://172.17.0.3:8000/ removed from forge failover list (syncing or failed)
+2017-01-02T20:44:58.307Z WARN Server http://172.17.0.4:8000/ removed from forge failover list (syncing or failed)
+2017-01-02T20:44:58.307Z INFO Iteration 25: best server is: http://172.17.0.2:8000/
+2017-01-02T20:44:58.307Z INFO Summary: http://172.17.0.4:8000/[-] http://172.17.0.3:8000/[-] http://172.17.0.2:8000/[*] 
 ......
 ```
 

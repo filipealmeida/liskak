@@ -1286,7 +1286,9 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				} else {
 					logger.info(`Iteration ${monitorIteration}: best server is: ${best_server}`);
 				}
-				if (monitorIteration > options.switchConfirmation) {
+				if (monitorIteration < options.switchConfirmation) {
+					logger.info(`Warming up, no action; Forge failover will be active in ${options.switchConfirmation - monitorIteration} cycles`);					
+				} else {
 					var summary = "";
 					Object.keys(configuration).forEach(function(element, key, _array) {
 						var runtime = configuration[element]['runtime'];
