@@ -1186,7 +1186,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					logger.info(`Evaluating ${element}`);
 					logger.debug(runtime.stats());
 					if ((runtime.check("failure") === true) || (runtime.check("syncing") === true) || (runtime.check("alive") === false)) {
-						logger.warn(`Server ${element} removed from forge failover list`);
+						logger.warn(`Server ${element} removed from forge failover list (syncing or failed)`);
 					} else {
 						logger.debug(`Server ${element} qualified for forge failover list`);
 						if (runtime.check("enabled") === true) {
@@ -1281,7 +1281,11 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				logger.debug(`Best server so far is ${best_server}`);
 				best_servers = next_servers;
 				next_servers = [];
-				logger.info(`Iteration ${monitorIteration}: best server is: ${best_server}`);
+				if (best_server === undefined) {
+					logger.info(`No nodes qualify for forging (all syncing?)`);
+				} else {
+					logger.info(`Iteration ${monitorIteration}: best server is: ${best_server}`);
+				}
 				if (monitorIteration > options.switchConfirmation) {
 					Object.keys(configuration).forEach(function(element, key, _array) {
 						var runtime = configuration[element]['runtime'];

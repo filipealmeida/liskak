@@ -5,4 +5,4 @@ HOST4=""
 CONFIG="src/liskak_mainnet.json"
 LOG_FILE="logs/forgingMain.log"
 pkill -f $HOST1 -9
-nohup bash liskak.sh -c $CONFIG -f $HOST1 $HOST2 $HOST3 $HOST4 -w 5000 -Q 50 18 -E 3 > $LOG_FILE 2>&1&
+nohup bash liskak.sh -c $CONFIG -f $HOST1 $HOST2 $HOST3 $HOST4 -P 3000 -w 3000 > $LOG_FILE 2>&1&
