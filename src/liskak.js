@@ -1205,16 +1205,6 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					if (runtime.check("status_height") > best_height) {
 						best_height = runtime.check("status_height");
 					}
-					if (runtime.check("status_consensus") > best_consensus) {
-						best_consensus = runtime.check("status_consensus");
-					}
-					if (runtime.check("broadhash") !== undefined) {
-						if (broadhashes[runtime.check("broadhash")] === undefined) {
-							broadhashes[runtime.check("broadhash")] = 1;
-						} else {
-							++broadhashes[runtime.check("broadhash")];
-						}
-					}
 				});
 
 				Object.keys(broadhashes).forEach(function(element, key, _array) {
@@ -1238,6 +1228,13 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 						} else {
 							next_servers.push(element);
 						}
+						if (runtime.check("broadhash") !== undefined) {
+							if (broadhashes[runtime.check("broadhash")] === undefined) {
+								broadhashes[runtime.check("broadhash")] = 1;
+							} else {
+								++broadhashes[runtime.check("broadhash")];
+							}
+						}
 					} else {
 						logger.debug(`Server ${element} does not meet best block height of ${best_height}, remove from candidate list`);
 					}
@@ -1258,6 +1255,9 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 							next_servers.unshift(element);
 						} else {
 							next_servers.push(element);
+						}
+						if (runtime.check("status_consensus") > best_consensus) {
+							best_consensus = runtime.check("status_consensus");
 						}
 					} else {
 						logger.debug(`Server ${element} does not meet best hash of ${best_broadhash}, remove from candidate list`);
