@@ -108,17 +108,11 @@ The following options are supported:
 # Usage examples
 
 ### Failover forging and node monitoring
-LiskAK running with the failoverMonkey flag will always try to have forging enabled at the best possible node according to the criteria below:
+LiskAK running with the failoverMonkey flag will always try to have forging enabled at the best possible node using always forge tactics.
+(https://github.com/4miners/always-forge)
 
-1. If consecutive API call failures are more than maxFailures (-F), force switch
-2. If difference to best node more than maxBlocksDelayed (-D), score badly, increased probability of switching to other node
-3. If node consensus (flag: -Q) under consensusMinPercent for consensusSampleNum samples, score badly, increased probability of switching to other node
-4. If more than one node forging, leave only the best one forging (based on blockheight and consensus percentange)
-5. If no nodes forging, select best one and enable forge (based on blockheight and consensus percentange)
-
-***NOTE #0:*** This is EXPERIMENTAL code and it was already nimble enough, if you run into trouble, checkout 82ef27cb3f803693b466938852071dafb117fabc
-***NOTE #1:*** In failover mode, -Z flag will measure consensus for -Q flag only when node is syncing (versus all the time from status API call) 
-***NOTE #2:*** Consensus will show NaN if the number of samples with -Q hasn't been reached yet 
+***NOTE #0:*** Forging failover is under tests due to the poor scoring technique used in the past couple of weeks. 
+If you run into trouble, checkout 82ef27cb3f803693b466938852071dafb117fabc or use the code provided at https://github.com/4miners/always-forge
 
 
 Example:
