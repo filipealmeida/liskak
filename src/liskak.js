@@ -1099,10 +1099,10 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 								if (data.success === true) {
 									runtime.stats("alive");
 									if (data.enabled === true) {
-										logger.debug(`Forging ENABLED at ${element}`);
+										logger.info(`Forging is ENABLED at ${element}`);
 										logger.debug(runtime.stats("enabled"));
 									} else {
-										logger.debug(`Forging DISABLED at ${element}`);
+										logger.debug(`Forging is DISABLED at ${element}`);
 										logger.debug(runtime.stats("disabled"));
 									}
 								} else {
@@ -1183,7 +1183,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				Object.keys(configuration).forEach(function(element, key, _array) {
 					var runtime = configuration[element]['runtime'];
 					var stats = runtime.stats();
-					logger.info(`Evaluating ${element}`);
+					logger.debug(`Evaluating ${element}`);
 					logger.debug(runtime.stats());
 					if ((runtime.check("failure") === true) || (runtime.check("syncing") === true) || (runtime.check("alive") === false)) {
 						logger.warn(`Server ${element} removed from forge failover list (syncing or failed)`);
@@ -1282,14 +1282,16 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				best_servers = next_servers;
 				next_servers = [];
 				if (best_server === undefined) {
-					logger.info(`No nodes qualify for forging (all syncing?)`);
+					logger.info(`No nodes qualify for forging switching, keeping last state (all syncing?)`);
 				} else {
 					logger.info(`Iteration ${monitorIteration}: best server is: ${best_server}`);
 				}
 				if (monitorIteration > options.switchConfirmation) {
+					var summary = "";
 					Object.keys(configuration).forEach(function(element, key, _array) {
 						var runtime = configuration[element]['runtime'];
 						var stats = runtime.stats();
+						summary = `${element}[${(runtime.check("enabled") === true)?'*':'-'}] ${summary}`;
 						if (element === best_server) {
 							if (runtime.check("enabled") === false) {
 								logger.info(`Iteration ${monitorIteration}: enabling at: ${best_server}`);
@@ -1300,16 +1302,17 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 									logger.error);
 							}
 						} else {
-							if (runtime.check("enabled") === true) {
-								logger.info(`Iteration ${monitorIteration}: disabling at: ${best_server}`);
+							if ((runtime.check("enabled") === true) && (best_server !== undefined)){
+								logger.info(`Iteration ${monitorIteration}: disabling at: ${element}`);
 								runtime.node("forgeDisable").then(
 									function(data) {
-										logger.warn(`Disabled forge at ${best_server} (${JSON.stringify(data)})`);
+										logger.warn(`Disabled forge at ${element} (${JSON.stringify(data)})`);
 									}, 
 									logger.error);
 							}
 						}
 					});
+					logger.info(`Summary: ${summary}`);
 				}
 
 			}
