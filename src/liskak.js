@@ -182,7 +182,7 @@ var defaultDisplay = function(data) {
 
 var firstFromListOrDefault = function (server_list, last) {
 	if (server_list.length > 0) {
-		return server_list.shift();
+		return server_list[0];
 	}
 	return last;
 }
@@ -1242,13 +1242,14 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 						logger.debug(`Server ${element} does not meet best block height of ${best_height}, remove from candidate list`);
 					}
 				});
-				logger.debug(`Qualifying servers after height evaluation: ${JSON.stringify(next_servers)}`);		
+				logger.debug(`Qualifying servers after height evaluation: ${JSON.stringify(next_servers)}`);
 				best_server = firstFromListOrDefault(next_servers, best_server);
 				logger.debug(`Best server so far is ${best_server}`);			
-				best_servers = next_servers;
+				best_servers = next_servers.slice();
 				next_servers = [];
 
 				//_filter_bad_broadhash
+				logger.debug(`Qualifying servers before broadhash evaluation: ${JSON.stringify(best_servers)}`);
 				Object.keys(best_servers).forEach(function(idx, key, _array) {
 					var element = best_servers[idx];
 					var runtime = configuration[element]['runtime'];
@@ -1265,10 +1266,11 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				logger.debug(`Qualifying servers after broadhash evaluation: ${JSON.stringify(next_servers)}`);		
 				best_server = firstFromListOrDefault(next_servers, best_server);
 				logger.debug(`Best server so far is ${best_server}`);	
-				best_servers = next_servers;
+				best_servers = next_servers.slice();
 				next_servers = [];
 
 				//_filter_bad_consensus
+				logger.debug(`Qualifying servers before consensus evaluation: ${JSON.stringify(best_servers)}`);				
 				Object.keys(best_servers).forEach(function(idx, key, _array) {
 					var element = best_servers[idx];
 					var runtime = configuration[element]['runtime'];
@@ -1285,7 +1287,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				logger.debug(`Qualifying servers after consensus evaluation: ${JSON.stringify(next_servers)}`);		
 				best_server = firstFromListOrDefault(next_servers, best_server);
 				logger.debug(`Best server so far is ${best_server}`);
-				best_servers = next_servers;
+				best_servers = next_servers.slice();
 				next_servers = [];
 				if (best_server === undefined) {
 					logger.info(`No nodes qualify for forging switching, keeping last state (all syncing?)`);
@@ -1306,6 +1308,10 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 								runtime.node("forgeEnable").then(
 									function(data) {
 										logger.warn(`Enabled forge at ${best_server} (${JSON.stringify(data)})`);
+										if (data.success === true) {
+											runtime.stats("enabled", true);
+											runtime.stats("disabled", false);
+										}
 									}, 
 									logger.error);
 							}
@@ -1315,6 +1321,10 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 								runtime.node("forgeDisable").then(
 									function(data) {
 										logger.warn(`Disabled forge at ${element} (${JSON.stringify(data)})`);
+										if (data.success === true) {
+											runtime.stats("enabled", false);
+											runtime.stats("disabled", true);
+										}
 									}, 
 									logger.error);
 							}
