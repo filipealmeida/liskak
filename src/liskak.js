@@ -1101,9 +1101,11 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 									if (data.enabled === true) {
 										logger.info(`Forging is ENABLED at ${element}`);
 										logger.debug(runtime.stats("enabled"));
+										logger.debug(runtime.stats("disabled", false));
 									} else {
 										logger.debug(`Forging is DISABLED at ${element}`);
 										logger.debug(runtime.stats("disabled"));
+										logger.debug(runtime.stats("enabled", false));
 									}
 								} else {
 									logger.error(`Could not get forging status from host ${element}`);
