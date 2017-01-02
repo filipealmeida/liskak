@@ -1207,16 +1207,6 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					}
 				});
 
-				Object.keys(broadhashes).forEach(function(element, key, _array) {
-					if (best_broadhash === undefined) {
-						best_broadhash = element;
-					}
-					if (broadhashes[element] > broadhashes[best_broadhash]) {
-						best_broadhash = element;
-					}
-				});
-				logger.debug(`Best broadhash is ${best_broadhash}, ${broadhashes[best_broadhash]} ocurrences`);		
-
 				//filter bad heights
 				var next_servers = [];
 				Object.keys(best_servers).forEach(function(idx, key, _array) {
@@ -1239,6 +1229,15 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 						logger.debug(`Server ${element} does not meet best block height of ${best_height}, remove from candidate list`);
 					}
 				});
+				Object.keys(broadhashes).forEach(function(element, key, _array) {
+					if (best_broadhash === undefined) {
+						best_broadhash = element;
+					}
+					if (broadhashes[element] > broadhashes[best_broadhash]) {
+						best_broadhash = element;
+					}
+				});
+				logger.debug(`Best broadhash is ${best_broadhash}, ${broadhashes[best_broadhash]} ocurrences`);	
 				logger.debug(`Qualifying servers after height evaluation: ${JSON.stringify(next_servers)}`);
 				best_server = firstFromListOrDefault(next_servers, best_server);
 				logger.debug(`Best server so far is ${best_server}`);			
