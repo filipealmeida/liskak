@@ -204,11 +204,7 @@ var liskak = function(_config, _options) {
 		'successes': 0,
 		'enabled': false,
 		'disabled': false,
-		'active': 0,
-		'stale': 0,
-		'height': 0,
 		'consensus': 100,
-		'score': 0,
 		'status_height': 0,
 		'status_blocks': 0,
 		'status_consensus': 0,
@@ -1124,23 +1120,6 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					} else { //testing
 						logger.silly(`Forging DISABLED at ${element} *** TESTMODE ***`);
 						logger.debug(runtime.stats("disabled"));
-					}
-				},
-				function(err) {
-					logger.error(err);
-					logger.debug(runtime.stats("failure"));
-				}
-			));
-			
-			promises.push(runtime.node("getHeight").then(
-				function (data) {
-					if (data.success === true) {
-						logger.debug(`Node ${element} reports height ${data.height}`);
-						runtime.stats("height", data.height);
-						runtime.stats("alive");
-					} else {
-						logger.error(`Unable to get block height from host ${element}`);
-						runtime.stats("failure");
 					}
 				},
 				function(err) {
