@@ -100,8 +100,8 @@ The following options are supported:
   -R, --reloadSchedule <ARG1>           	Restart after N minutes if not forging, supervise only, 0 means disabled
   -P, --pollingInterval <ARG1>          	Interval between node polling in milliseconds ("10000" by default)
   -w, --apiRequestTimeout <ARG1>        	API request timeout, 0 means disabled
-  -F, --maxFailures <ARG1>              	Maximum failures tolerated when chatting with lisk nodes ("10" by default)
-  -D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("5" by default)
+  ~~-F, --maxFailures <ARG1>              	Maximum failures tolerated when chatting with lisk nodes ("10" by default)~~
+  ~~-D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("5" by default)~~
 
 ```
 
