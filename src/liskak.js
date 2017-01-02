@@ -307,6 +307,10 @@ var liskak = function(_config, _options) {
 				if (key === "alive") {
 					_stats["failure"] = !_stats["alive"];
 				}
+				if (key === "failure") {
+					_stats["enabled"] = false;
+					_stats["disabled"] = false;
+				}
 			} else {
 				_stats[key] = value;
 			}
