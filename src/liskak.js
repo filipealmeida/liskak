@@ -1306,10 +1306,12 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					logger.info(`Warming up, no action; Forge failover will be active in ${options.switchConfirmation - monitorIteration} cycles`);
 				} else {
 					var summary = "";
+					var RuntimeStats = [];
 					Object.keys(configuration).forEach(function(element, key, _array) {
 						var runtime = configuration[element]['runtime'];
 						var stats = runtime.stats();
 						summary = `${element}[${(runtime.check("enabled") === true)?'*':'-'}] ${summary}`;
+						RuntimeStats.push(`"host":"${element}","height":${runtime.check("status_height")},"syncing":${runtime.check("syncing")},"consensus":${runtime.check("status_consensus")},"average_consensus":${runtime.check("average_consensus")},"broadhash":${runtime.check("broadhash")}`);
 						if (element === best_server) {
 							if (runtime.check("enabled") === false) {
 								logger.info(`Iteration ${monitorIteration}: enabling at: ${best_server}`);
@@ -1339,6 +1341,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 						}
 					});
 					logger.info(`Summary: ${summary}`);
+					logger.info(`Liskak Runtime Stats: {${RuntimeStats.join(',')}}`);
 				}
 
 			}
