@@ -101,7 +101,7 @@ The following options are supported:
   -P, --pollingInterval <ARG1>          	Interval between node polling in milliseconds ("10000" by default)
   -w, --apiRequestTimeout <ARG1>        	API request timeout, 0 means disabled
   ~~-F, --maxFailures <ARG1>              	Maximum failures tolerated when chatting with lisk nodes ("10" by default)~~
-  ~~-D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("5" by default)~~
+  -D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("0" by default)
 
 ```
 
@@ -111,7 +111,7 @@ The following options are supported:
 LiskAK running with the failoverMonkey flag will always try to have forging enabled at the best possible node using always forge tactics.
 (https://github.com/4miners/always-forge)
 
-***NOTE #0:*** Forging failover is under tests due to the poor scoring technique used in the past couple of weeks. 
+***NOTE #0:*** Forging failover is under tests due to the poor scoring technique used in the past couple of weeks.
 If you run into trouble, checkout 82ef27cb3f803693b466938852071dafb117fabc or use the code provided at https://github.com/4miners/always-forge
 
 
@@ -136,7 +136,7 @@ someuser@foo:~/liskak$ ./liskak.sh -c /home/foo/my_forger_configuration.json -f 
 2017-01-02T20:44:58.307Z WARN Server http://172.17.0.3:8000/ removed from forge failover list (syncing or failed)
 2017-01-02T20:44:58.307Z WARN Server http://172.17.0.4:8000/ removed from forge failover list (syncing or failed)
 2017-01-02T20:44:58.307Z INFO Iteration 25: best server is: http://172.17.0.2:8000/
-2017-01-02T20:44:58.307Z INFO Summary: http://172.17.0.4:8000/[-] http://172.17.0.3:8000/[-] http://172.17.0.2:8000/[*] 
+2017-01-02T20:44:58.307Z INFO Summary: http://172.17.0.4:8000/[-] http://172.17.0.3:8000/[-] http://172.17.0.2:8000/[*]
 ......
 ```
 
@@ -163,7 +163,7 @@ Using mainnet as an example, the script using `bash monitorMain.sh`. The logs fo
 ### Supervision of node and automatic restarts/reloads
 1. Fork 1: issues rebuild but requires work to do this only if you forged the last block (please open an issue with loglines such as this so it can be corrected)
 2. Fork 2: issues a lisk restart
-3. Fork 3: issues a rebuild 
+3. Fork 3: issues a rebuild
 4. If "-B <MINUTES>" flag set, rebuild is issued if no blocks occur in <MINUTES>
 
 Please advise for further rules by opening an issue.
@@ -324,7 +324,7 @@ LiskAddress;DelegateName
 Now you want to add some (upvotes) to your list or remove some (downvotes)
 Produce a couple of text files (none required, but both possible)
 1. One with the usernames or addresses (one per line) of the delegates you want to upvote, let's call it "in.txt".
-2. Other with the usernames or addresses (one per line) of the delegates you want to downvote, "out.txt". 
+2. Other with the usernames or addresses (one per line) of the delegates you want to downvote, "out.txt".
 
 Now run the command:
 ```

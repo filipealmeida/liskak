@@ -290,6 +290,15 @@ var liskak = function(_config, _options) {
 	logger.debug('Configuration', command);
 
 	var check = function(key) {
+		if (key === "average_consensus") {
+			var sum = 0;
+			var avg = 0;
+			for (var idx = 0; idx < _stats["consensus"].length; idx++) {
+				sum += _stats["consensus"][idx];
+			}
+			avg = sum / _stats["consensus"].length;
+			return (_stats["consensus"].length < consensusSampleNum) ? 100 : avg;
+		}
 		return _stats[key];
 	}
 
@@ -298,6 +307,7 @@ var liskak = function(_config, _options) {
 		if (key === undefined) {
 			return _stats;
 		} else {
+			//TODO: use switch
 			if (value === undefined) {
 				_stats[key] = true;
 				if (key === "alive") {
@@ -309,6 +319,14 @@ var liskak = function(_config, _options) {
 				}
 			} else {
 				_stats[key] = value;
+				if (key === "status_consensus") {
+					if (!isNaN(parseFloat(value)) && isFinite(value)) {
+						_stats["consensus"].push(value);
+						if (_stats["consensus"].length > consensusSampleNum) {
+							_stats["consensus"].shift();
+						}
+					}
+				}
 			}
 			return _stats[key];
 		}
@@ -1252,14 +1270,26 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				Object.keys(best_servers).forEach(function(idx, key, _array) {
 					var element = best_servers[idx];
 					var runtime = configuration[element]['runtime'];
-					if (runtime.check("status_consensus") >= best_consensus) {
+					var average_consensus = runtime.check("average_consensus");
+					//TODO: cleanup logic
+					if ((consensusMinPercent > 0) && (average_consensus > consensusMinPercent)) {
+						logger.debug(`Server ${element} has an average consensus of ${average_consensus} in ${consensusSampleNum} samples (>${consensusMinPercent}), keeping in list`);
 						if (runtime.check("enabled") === true) {
 							next_servers.unshift(element);
 						} else {
 							next_servers.push(element);
 						}
 					} else {
-						logger.debug(`Server ${element} does not meet best consensus of ${best_consensus}, remove from candidate list`);
+						logger.debug(`Server ${element} has an average consensus of ${average_consensus} in ${consensusSampleNum} samples (<${consensusMinPercent}), fallback to best consensus competition`);
+						if (runtime.check("status_consensus") >= best_consensus) {
+							if (runtime.check("enabled") === true) {
+								next_servers.unshift(element);
+							} else {
+								next_servers.push(element);
+							}
+						} else {
+							logger.debug(`Server ${element} does not meet best consensus of ${best_consensus}, remove from candidate list`);
+						}
 					}
 				});
 				logger.debug(`Qualifying servers after consensus evaluation: ${JSON.stringify(next_servers)}`);
