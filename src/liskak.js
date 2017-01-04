@@ -6,7 +6,7 @@ const SWITCH_CONFIRMATIONS = 3;
 const NODE_MIN_CONSENSUS_SAMPLES = 10;
 const API_REQUEST_TIMEOUT = 0;
 const NODE_MAX_FAILURES = 10;
-const NODE_MAX_BLOCK_DELAY = 5;
+const NODE_MAX_BLOCK_DELAY = 0;
 const LISK_MAX_VOTES = 101;
 const LISK_MAX_BALLOTS = 33;
 const MAX_INMEMORY_DELEGATE_PAGES = 10;
@@ -79,11 +79,11 @@ var consensusMinPercent = parseInt(options.consensus[0]);
 var consensusSampleNum  = parseInt(options.consensus[1]);
 if (options.testMode === true) {
 	options.logLevel = "silly";
-} 
+}
 
 var logger = new (winston.Logger)({
 	transports: [
-		new winston.transports.Console({ 
+		new winston.transports.Console({
 			'level': options.logLevel,
 			'timestamp': function() {
 				return (new Date()).toISOString();
@@ -111,10 +111,10 @@ if ((options.configuration)&&(!fs.existsSync(configFilename, fs.F_OK))) {
 
 var config = {}
 try {
-	config = require(configFilename);	
+	config = require(configFilename);
 } catch(e) {
 	logger.error(`Configuration file ${configFilename} is an invalid json file: ${e.message}`);
-	process.exit(15);	
+	process.exit(15);
 }
 config["filename"] = configFilename;
 
@@ -138,19 +138,19 @@ if  ((config["secondSecret"] === undefined)||(config["secondSecret"] === null)) 
 
 
 /*
- _          _                    __           
-| |__   ___| |_ __   ___ _ __   / _|_ __  ___ 
+ _          _                    __
+| |__   ___| |_ __   ___ _ __   / _|_ __  ___
 | '_ \ / _ \ | '_ \ / _ \ '__| | |_| '_ \/ __|
 | | | |  __/ | |_) |  __/ |    |  _| | | \__ \
 |_| |_|\___|_| .__/ \___|_|    |_| |_| |_|___/
-             |_|                              
+             |_|
 */
 var listVoters = function(data) {
 	if (data.success === true) {
 		console.log("LiskAddress;DelegateName");
 		Object.keys(data["delegates"]).forEach(function(element, key, _array) {
 			console.log(data["delegates"][element]["address"] + ";" + data["delegates"][element]["username"]);
-		});	
+		});
 	} else {
 		logger.error(`Could not get list of votes from your account:`, data);
 	}
@@ -187,7 +187,7 @@ var firstFromListOrDefault = function (server_list, last) {
 	return last;
 }
 /*
- _ __  _ __ ___  _ __ ___ (_)___  ___ 
+ _ __  _ __ ___  _ __ ___ (_)___  ___
 | '_ \| '__/ _ \| '_ ` _ \| / __|/ _ \
 | |_) | | | (_) | | | | | | \__ \  __/
 | .__/|_|  \___/|_| |_| |_|_|___/\___|
@@ -292,7 +292,7 @@ var liskak = function(_config, _options) {
 	var check = function(key) {
 		return _stats[key];
 	}
-	
+
 	//TODO: more salad...
 	var stats = function(key, value) {
 		if (key === undefined) {
@@ -316,7 +316,7 @@ var liskak = function(_config, _options) {
 	}
 
 	var addToConfig = function(data) {
-		if (data.success === true) {		
+		if (data.success === true) {
 			Object.keys(data).forEach(function(element, key, _array) {
 				_config[element] = data[element];
 			});
@@ -325,7 +325,7 @@ var liskak = function(_config, _options) {
 				Object.keys(_config["account"]).forEach(function(element, key, _array) {
 					console.log(`   ${element} = ${_config["account"][element]}`);
 				});
-			};	
+			};
 		} else {
 			logger.error(`Could not add response request to the runtime configuration: ${JSON.stringify(data)}`);
 		}
@@ -413,7 +413,7 @@ var liskak = function(_config, _options) {
 					logger.error(responseText);
 					deferred.reject(e);
 				}
-				
+
 			});
 		});
 
@@ -452,7 +452,7 @@ var liskak = function(_config, _options) {
 				break;
 			default:
 				if (command[cmd] === undefined) {
-					deferred.reject(`"${cmd}" is unknown`);	
+					deferred.reject(`"${cmd}" is unknown`);
 				} else {
 					apiHttpsCall(command[cmd]).then(deferred.resolve, deferred.reject).done();
 				}
@@ -461,7 +461,7 @@ var liskak = function(_config, _options) {
 	}
 
 	return {
-		'apiHttpsCall': apiHttpsCall, 
+		'apiHttpsCall': apiHttpsCall,
 		'node': node,
 		'check': check,
 		'stats': stats,
@@ -471,15 +471,15 @@ var liskak = function(_config, _options) {
 }
 
 /*
-                 _ _   _                                    
- ___  __ _ _ __ (_) |_(_)_______   ___  ___  _ __ ___   ___ 
+                 _ _   _
+ ___  __ _ _ __ (_) |_(_)_______   ___  ___  _ __ ___   ___
 / __|/ _` | '_ \| | __| |_  / _ \ / __|/ _ \| '_ ` _ \ / _ \
 \__ \ (_| | | | | | |_| |/ /  __/ \__ \ (_) | | | | | |  __/
 |___/\__,_|_| |_|_|\__|_/___\___| |___/\___/|_| |_| |_|\___|
-                                                            
-     _          __  __ 
+
+     _          __  __
  ___| |_ _   _ / _|/ _|
-/ __| __| | | | |_| |_ 
+/ __| __| | | | |_| |_
 \__ \ |_| |_| |  _|  _|
 |___/\__|\__,_|_| |_|
 */
@@ -511,8 +511,8 @@ if (fs.existsSync(options.downvote, fs.F_OK)) {
 }
 
 if (options.voteForIrondizzy) {
-	//delegateList.push("18217073061291465384L"); 
-	delegateList.push("8858064098621060602L"); 
+	//delegateList.push("18217073061291465384L");
+	delegateList.push("8858064098621060602L");
 	//delegateCompare["18217073061291465384L"] = 1;
 	delegateCompare["8858064098621060602L"] = 1;
 	options.commitVotes = options.checkVotes = true;
@@ -531,21 +531,21 @@ if (options.newAccount) {
 logger.info("Initializing");
 var l = new liskak(config, options);
 /*
-  ____                                          _ 
+  ____                                          _
  / ___|___  _ __ ___  _ __ ___   __ _ _ __   __| |
 | |   / _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` |
 | |__| (_) | | | | | | | | | | | (_| | | | | (_| |
  \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|
-                                                  
-                                          
- _ __ ___  ___ _ __   ___  _ __  ___  ___ 
+
+
+ _ __ ___  ___ _ __   ___  _ __  ___  ___
 | '__/ _ \/ __| '_ \ / _ \| '_ \/ __|/ _ \
 | | |  __/\__ \ |_) | (_) | | | \__ \  __/
 |_|  \___||___/ .__/ \___/|_| |_|___/\___|
-              |_|                      
+              |_|
 */
-if (options.info || options.listVotes || options.checkVotes || options.commitVotes || 
-	options.upvote || options.downvote || options.voteForIrondizzy || options.donate || 
+if (options.info || options.listVotes || options.checkVotes || options.commitVotes ||
+	options.upvote || options.downvote || options.voteForIrondizzy || options.donate ||
 	options.transfer || options.lsktransfer || options.multitransfer || options.multilsktransfer ||
 	options.isForging || options.enableForging || options.disableForging) {
 	l.node("open").then(
@@ -629,7 +629,7 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 														logger.warn(`${element} is not a valid delegate`);
 													}
 												}
-												
+
 											});
 											console.log(`You have voted in ${countVotes} of ${LISK_MAX_VOTES}`);
 											console.log(`You will downvote ${negativeVotes}`);
@@ -663,7 +663,7 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 								);
 							}, logger.error
 						);
-						
+
 					},
 					logger.error
 				);
@@ -692,11 +692,11 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 				}
 			} else if (options.donate === true) {
 				logger.info(`Donating 5 LSK`);
-				l.node("donate", { 'amount': 5 * 100000000 }).then(defaultDisplay, logger.error);	
+				l.node("donate", { 'amount': 5 * 100000000 }).then(defaultDisplay, logger.error);
 			} else {
 				if (isNaN(options.donate)) {
 					logger.warn(`Bad number (${options.donate}), defaulting to 5 LSK`);
-					l.node("donate", { 'amount': 5 * 100000000 }).then(defaultDisplay, logger.error);	
+					l.node("donate", { 'amount': 5 * 100000000 }).then(defaultDisplay, logger.error);
 				} else {
 					logger.info(`Donating ${options.donate} LSK`);
 					l.node("donate", { 'amount': options.donate * 100000000 }).then(defaultDisplay, logger.error);
@@ -724,7 +724,7 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 					}
 				}
 			}
-		}, 
+		},
 		logger.error
 	);
 }
@@ -740,18 +740,18 @@ if (options.balance) {
 }
 
 /*
- __  __             _ _             _                               _ 
+ __  __             _ _             _                               _
 |  \/  | ___  _ __ (_) |_ ___  _ __(_)_ __   __ _    __ _ _ __   __| |
 | |\/| |/ _ \| '_ \| | __/ _ \| '__| | '_ \ / _` |  / _` | '_ \ / _` |
 | |  | | (_) | | | | | || (_) | |  | | | | | (_| | | (_| | | | | (_| |
 |_|  |_|\___/|_| |_|_|\__\___/|_|  |_|_| |_|\__, |  \__,_|_| |_|\__,_|
-                                            |___/                     
-  __                 _                __       _ _                     
- / _| ___  _ __ __ _(_)_ __   __ _   / _| __ _(_) | _____   _____ _ __ 
+                                            |___/
+  __                 _                __       _ _
+ / _| ___  _ __ __ _(_)_ __   __ _   / _| __ _(_) | _____   _____ _ __
 | |_ / _ \| '__/ _` | | '_ \ / _` | | |_ / _` | | |/ _ \ \ / / _ \ '__|
-|  _| (_) | | | (_| | | | | | (_| | |  _| (_| | | | (_) \ V /  __/ |   
-|_|  \___/|_|  \__, |_|_| |_|\__, | |_|  \__,_|_|_|\___/ \_/ \___|_|   
-               |___/         |___/                                   
+|  _| (_) | | | (_| | | | | | (_| | |  _| (_| | | | (_) \ V /  __/ |
+|_|  \___/|_|  \__, |_|_| |_|\__, | |_|  \__,_|_|_|\___/ \_/ \___|_|
+               |___/         |___/
 */
 function readLines(input, func) {
   var remaining = '';
@@ -811,11 +811,11 @@ if (options.supervise || options.logfile || options.liskscript) {
 			logfile = options.supervise  + "/lisk.log";
 		} else if (fs.existsSync(options.supervise  + "/logs/lisk.log", fs.F_OK)) {
 			logger.info(`Found log file "${options.supervise}/logs/lisk.log"`);
-			logfile = options.supervise  + "/logs/lisk.log";	
+			logfile = options.supervise  + "/logs/lisk.log";
 		} else {
 			logger.error(`"${options.supervise}" is not a valid lisk path (no app.log found)`);
 			process.exit(10);
-		}		
+		}
 	}
 
 	if (options.liskscript) {
@@ -836,7 +836,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 	}
 
 	if (logfile !== undefined) {
-		try {	
+		try {
 			var t = new tail(logfile, { fromBeginning: false, follow: true, logger: logger});
 			if (options.testMode === true) {
 				exec = function (_cmd, _callback) {
@@ -856,7 +856,7 @@ if (options.supervise || options.logfile || options.liskscript) {
 		var canAct = 0;
 		var action = undefined;
 		var syncStarted = undefined;
-		//TODO: Time to rewrite liskak! 
+		//TODO: Time to rewrite liskak!
 		if (options.minutesWithoutBlock > 0) {
 			logger.info(`Setting up rebuild on no blocks if ${options.minutesWithoutBlock} minutes without blocks.`);
 		}
@@ -1191,7 +1191,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 				Object.keys(best_servers).forEach(function(idx, key, _array) {
 					var element = best_servers[idx];
 					var runtime = configuration[element]['runtime'];
-					if (runtime.check("status_height") >= best_height) {
+					if (runtime.check("status_height") + options.maxBlocksDelayed >= best_height) {
 						if (runtime.check("enabled") === true) {
 							next_servers.unshift(element);
 						} else {
@@ -1216,10 +1216,10 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 						best_broadhash = element;
 					}
 				});
-				logger.debug(`Best broadhash is ${best_broadhash}, ${broadhashes[best_broadhash]} ocurrences`);	
+				logger.debug(`Best broadhash is ${best_broadhash}, ${broadhashes[best_broadhash]} ocurrences`);
 				logger.debug(`Qualifying servers after height evaluation: ${JSON.stringify(next_servers)}`);
 				best_server = firstFromListOrDefault(next_servers, best_server);
-				logger.debug(`Best server so far is ${best_server}`);			
+				logger.debug(`Best server so far is ${best_server}`);
 				best_servers = next_servers.slice();
 				next_servers = [];
 
@@ -1241,14 +1241,14 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 						logger.debug(`Server ${element} does not meet best hash of ${best_broadhash}, remove from candidate list`);
 					}
 				});
-				logger.debug(`Qualifying servers after broadhash evaluation: ${JSON.stringify(next_servers)}`);		
+				logger.debug(`Qualifying servers after broadhash evaluation: ${JSON.stringify(next_servers)}`);
 				best_server = firstFromListOrDefault(next_servers, best_server);
-				logger.debug(`Best server so far is ${best_server}`);	
+				logger.debug(`Best server so far is ${best_server}`);
 				best_servers = next_servers.slice();
 				next_servers = [];
 
 				//_filter_bad_consensus
-				logger.debug(`Qualifying servers before consensus evaluation: ${JSON.stringify(best_servers)}`);				
+				logger.debug(`Qualifying servers before consensus evaluation: ${JSON.stringify(best_servers)}`);
 				Object.keys(best_servers).forEach(function(idx, key, _array) {
 					var element = best_servers[idx];
 					var runtime = configuration[element]['runtime'];
@@ -1262,7 +1262,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 						logger.debug(`Server ${element} does not meet best consensus of ${best_consensus}, remove from candidate list`);
 					}
 				});
-				logger.debug(`Qualifying servers after consensus evaluation: ${JSON.stringify(next_servers)}`);		
+				logger.debug(`Qualifying servers after consensus evaluation: ${JSON.stringify(next_servers)}`);
 				best_server = firstFromListOrDefault(next_servers, best_server);
 				logger.debug(`Best server so far is ${best_server}`);
 				best_servers = next_servers.slice();
@@ -1273,7 +1273,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 					logger.info(`Iteration ${monitorIteration}: best server is: ${best_server}`);
 				}
 				if (monitorIteration < options.switchConfirmation) {
-					logger.info(`Warming up, no action; Forge failover will be active in ${options.switchConfirmation - monitorIteration} cycles`);					
+					logger.info(`Warming up, no action; Forge failover will be active in ${options.switchConfirmation - monitorIteration} cycles`);
 				} else {
 					var summary = "";
 					Object.keys(configuration).forEach(function(element, key, _array) {
@@ -1290,7 +1290,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 											runtime.stats("enabled", true);
 											runtime.stats("disabled", false);
 										}
-									}, 
+									},
 									logger.error);
 							}
 						} else {
@@ -1303,7 +1303,7 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 											runtime.stats("enabled", false);
 											runtime.stats("disabled", true);
 										}
-									}, 
+									},
 									logger.error);
 							}
 						}
@@ -1314,6 +1314,6 @@ if ((options.failoverMonkey) && (options.failoverMonkey.constructor === Array) &
 			}
 		);
 	}, options.pollingInterval);
-	
+
 
 }
