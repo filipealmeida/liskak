@@ -100,7 +100,7 @@ The following options are supported:
   -R, --reloadSchedule <ARG1>           	Restart after N minutes if not forging, supervise only, 0 means disabled
   -P, --pollingInterval <ARG1>          	Interval between node polling in milliseconds ("10000" by default)
   -w, --apiRequestTimeout <ARG1>        	API request timeout, 0 means disabled
-  ~~-F, --maxFailures <ARG1>              	Maximum failures tolerated when chatting with lisk nodes ("10" by default)~~
+  -F, --maxFailures <ARG1>              	REMOVED - first failure on communication is terminal, force switch
   -D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("0" by default)
 
 ```
@@ -108,8 +108,9 @@ The following options are supported:
 # Usage examples
 
 ### Failover forging and node monitoring
-LiskAK running with the failoverMonkey flag will always try to have forging enabled at the best possible node using always forge tactics.
-(https://github.com/4miners/always-forge)
+LiskAK running with the failoverMonkey flag will always try to have forging enabled at the best possible node using always forge tactics with a few tweaks, the tweaks being:
+* Flag: ```-Q 51 2``` -> don't switch to better consensus if consensus is above 51%
+* Flag: ```-D 2``` -> don't switch to better height if height of current forging node is under 2 of difference
 
 ***NOTE #0:*** Forging failover is under tests due to the poor scoring technique used in the past couple of weeks.
 If you run into trouble, checkout 82ef27cb3f803693b466938852071dafb117fabc or use the code provided at https://github.com/4miners/always-forge
