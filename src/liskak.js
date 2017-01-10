@@ -34,6 +34,7 @@ var options = stdio.getopt({
 	'getHeight': {        key: 'd', args: 0, description: 'Get block height'},
 	'logLevel': {         key: 'L', args: 1, description: 'Logging level, one of: error, warn, info verbose, debug, silly', default: 'info'},
 	'listVotes': {        key: 'l', args: 1, description: 'Lists your votes'},
+	'listVoters': {       key: 'V', args: 1, description: 'Lists your voters'},
 	'upvote': {           key: 'I', args: 1, description: 'Vote for delegates in file specified'},
 	'downvote': {         key: 'O', args: 1, description: 'Remove vote from delegates in file specified'},
 	'checkVotes': {       key: 'C', args: 0, description: 'Checks current votes, compares with upvote/downvote data in files (flags -I and -O)'},
@@ -145,7 +146,7 @@ if  ((config["secondSecret"] === undefined)||(config["secondSecret"] === null)) 
 |_| |_|\___|_| .__/ \___|_|    |_| |_| |_|___/
              |_|
 */
-var listVoters = function(data) {
+var listVotes = function(data) {
 	if (data.success === true) {
 		console.log("LiskAddress;DelegateName");
 		Object.keys(data["delegates"]).forEach(function(element, key, _array) {
@@ -179,6 +180,14 @@ var defaultDisplay = function(data) {
 		logger.error(`Could not handle the response:`, data);
 	}
 }
+
+var stringifyDisplay = function(data) {
+	if (data.success === true) {
+		console.log(JSON.stringify(data, null, 4));
+	} else {
+		logger.error(`Could not handle the response:`, JSON.stringify(data));
+	} //
+} //
 
 var firstFromListOrDefault = function (server_list, last) {
 	if (server_list.length > 0) {
@@ -267,6 +276,10 @@ var liskak = function(_config, _options) {
 		'listVotes': {
 			'path': '/api/accounts/delegates',
 			'querystring': [ "address" ]
+		},
+		'listVoters': {
+			'path': '/api/delegates/voters',
+			'querystring': [ "publicKey" ]
 		},
 		'listDelegates': {
 			'path': '/api/delegates',
@@ -562,7 +575,7 @@ var l = new liskak(config, options);
 |_|  \___||___/ .__/ \___/|_| |_|___/\___|
               |_|
 */
-if (options.info || options.listVotes || options.checkVotes || options.commitVotes ||
+if (options.info || options.listVotes || options.listVoters || options.checkVotes || options.commitVotes ||
 	options.upvote || options.downvote || options.voteForIrondizzy || options.donate ||
 	options.transfer || options.lsktransfer || options.multitransfer || options.multilsktransfer ||
 	options.isForging || options.enableForging || options.disableForging) {
@@ -595,7 +608,7 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 								l.node("listVotes").then(
 									function(data) {
 										if (options.listVotes) {
-											listVoters(data);
+											listVotes(data);
 										}
 										if (options.checkVotes) {
 											var countVotes = 0;
@@ -687,6 +700,9 @@ if (options.info || options.listVotes || options.checkVotes || options.commitVot
 				);
 			}
 			/////////////////////////////////////////////////////
+			if (options.listVoters) {
+				l.node("listVoters").then(stringifyDisplay,logger.error);
+			}
 			if (options.isForging) {
 				l.node("forgeStatus").then(isForging,logger.error);
 			}
