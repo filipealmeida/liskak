@@ -35,6 +35,7 @@ var options = stdio.getopt({
 	'logLevel': {         key: 'L', args: 1, description: 'Logging level, one of: error, warn, info verbose, debug, silly', default: 'info'},
 	'listVotes': {        key: 'l', args: 1, description: 'Lists your votes'},
 	'listVoters': {       key: 'V', args: 1, description: 'Lists your voters'},
+	'shareWithVoters': {  key: 'U', args: 1, description: 'Share ARG1 percent / value of your account funds with your voters.'},
 	'upvote': {           key: 'I', args: 1, description: 'Vote for delegates in file specified'},
 	'downvote': {         key: 'O', args: 1, description: 'Remove vote from delegates in file specified'},
 	'checkVotes': {       key: 'C', args: 0, description: 'Checks current votes, compares with upvote/downvote data in files (flags -I and -O)'},
@@ -187,6 +188,7 @@ var stringifyDisplay = function(data) {
 	} else {
 		logger.error(`Could not handle the response:`, JSON.stringify(data));
 	} //
+	return data;
 } //
 
 var firstFromListOrDefault = function (server_list, last) {
@@ -343,7 +345,7 @@ var liskak = function(_config, _options) {
 			}
 			return _stats[key];
 		}
-		return _stats;
+		//return _stats;
 	}
 
 	var addToConfig = function(data) {
@@ -704,8 +706,48 @@ if (options.info || options.listVotes || options.listVoters || options.checkVote
 				);
 			}
 			/////////////////////////////////////////////////////
-			if (options.listVoters) {
-				l.node("listVoters").then(stringifyDisplay,logger.error);
+			if (options.listVoters || options.shareWithVoters) {
+				l.node("listVoters")
+				 //.then(stringifyDisplay)
+				 .then(function(votersData) {
+					if (options.shareWithVoters) {
+						var sum = 0;
+						var myBalance = parseInt(data.account.balance);
+						var rewardBalance = parseInt(options.shareWithVoters)*100000000;
+						var matches = undefined;
+						if (matches = options.shareWithVoters.match(/^(\d+)%$/)) {
+							rewardBalance = (parseInt(matches[1])/100) * myBalance;
+						}
+						if (rewardBalance > myBalance) {
+							logger.error(`Your balance of ${myBalance/100000000} is less than what you want to award which is ${rewardBalance/100000000}`);
+							return "ERR";
+						}
+						if (rewardBalance < 1) {
+							logger.error(`Your must award your voters a positive number, try 50% for half of your balance or 1000 for 1000LSK`);
+							return "ERR";
+						}
+						if (isNaN(rewardBalance)) {
+							logger.error(`Your must award your voters number or percentage of your balance, try 50% for half of your balance or 1000 for 1000LSK`);
+							return "ERR";
+						}
+						for (var i = 0; i < votersData.accounts.length; i++) {
+							sum += parseInt(votersData.accounts[i].balance);
+						}
+						logger.info(`Your balance is ${myBalance} and the total sum of balances of your voters is ${sum}`);
+						logger.info(`You will award ${rewardBalance} to your voters based on their shares as your voters`);
+						for (var i = 0; i < votersData.accounts.length; i++) {
+							votersData.accounts[i].percent = votersData.accounts[i].balance / sum;
+							var award = parseInt(votersData.accounts[i].percent * rewardBalance);
+							var address = votersData.accounts[i].address;
+							logger.info(`${votersData.accounts[i].username} has ${votersData.accounts[i].balance/100000000} which is ${votersData.accounts[i].percent * 100}% of your votes`);
+							logger.info(`${votersData.accounts[i].username} with address ${votersData.accounts[i].address} is being awarded with ${award / 100000000} LSK`);
+							l.node("transfer", { 'amount': award, 'recipientId': address }).then(defaultDisplay, logger.error);
+						}
+						
+					} else {
+						stringifyDisplay(votersData);
+					}
+				},logger.error);
 			}
 			if (options.isForging) {
 				l.node("forgeStatus").then(isForging,logger.error);
