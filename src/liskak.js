@@ -420,6 +420,10 @@ var liskak = function(_config, _options) {
 				}
 			}
 			if (options.method === "PUT") {
+				options.querystring = undefined;
+				if ((qstr !== undefined) && (qstr.secondSecret !== undefined) && (qstr.secondSecret === "")) {
+					delete qstr["secondSecret"];
+				}
 				options.body = JSON.stringify(qstr);
 			}
 			if (options.method === "POST") {
