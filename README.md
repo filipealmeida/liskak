@@ -73,6 +73,8 @@ The following options are supported:
   -d, --getHeight                       	Get block height
   -L, --logLevel <ARG1>                 	Logging level, one of: error, warn, info verbose, debug, silly ("info" by default)
   -l, --listVotes <ARG1>                	Lists your votes
+  -V, --listVoters <ARG1>               	Lists your voters
+  -U, --shareWithVoters <ARG1>          	Share ARG1 percent / value of your account funds with your voters.
   -I, --upvote <ARG1>                   	Vote for delegates in file specified
   -O, --downvote <ARG1>                 	Remove vote from delegates in file specified
   -C, --checkVotes                      	Checks current votes, compares with upvote/downvote data in files (flags -I and -O)
@@ -100,8 +102,9 @@ The following options are supported:
   -R, --reloadSchedule <ARG1>           	Restart after N minutes if not forging, supervise only, 0 means disabled
   -P, --pollingInterval <ARG1>          	Interval between node polling in milliseconds ("10000" by default)
   -w, --apiRequestTimeout <ARG1>        	API request timeout, 0 means disabled
-  -F, --maxFailures <ARG1>              	REMOVED - first failure on communication is terminal, force switch
-  -D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node ("0" by default)
+  -F, --maxFailures <ARG1>              	Maximum failures tolerated when chatting with lisk nodes ("10" by default)
+  -D, --maxBlocksDelayed <ARG1>         	Maximum number of block difference between nodes before change forging node
+  -X, --testMode                        	Test mode
 
 ```
 
