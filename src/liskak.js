@@ -366,7 +366,7 @@ var liskak = function(_config, _options) {
 
 	var apiHttpsCall = function (options, extra) {
 		var deferred = Q.defer();
-		if (options.method === "POST") {
+		if ((options.method === "POST") || (options.method === "PUT")) {
 			options.headers = {
 				'Content-Type': 'application/json'
 			}
@@ -422,11 +422,13 @@ var liskak = function(_config, _options) {
 				}
 			}
 			if (options.method === "PUT") {
-				options.querystring = undefined;
 				if ((qstr !== undefined) && (qstr.secondSecret !== undefined) && (qstr.secondSecret === "")) {
 					delete qstr["secondSecret"];
 				}
 				options.body = JSON.stringify(qstr);
+			}
+			if (options.path === "/api/accounts/delegates") {
+				options.querystring = undefined;
 			}
 			if (options.method === "POST") {
 				options.body = JSON.stringify(qstr);
@@ -584,7 +586,7 @@ var l = new liskak(config, options);
 if (options.info || options.listVotes || options.listVoters || options.checkVotes || options.commitVotes ||
 	options.upvote || options.downvote || options.voteForIrondizzy || options.donate ||
 	options.transfer || options.lsktransfer || options.multitransfer || options.multilsktransfer ||
-	options.isForging || options.enableForging || options.disableForging) {
+	options.isForging || options.enableForging || options.disableForging || options.shareWithVoters) {
 	l.node("open").then(
 		function (data) {
 			if (options.listVotes || options.checkVotes) {
@@ -743,7 +745,7 @@ if (options.info || options.listVotes || options.listVoters || options.checkVote
 							logger.info(`${votersData.accounts[i].username} with address ${votersData.accounts[i].address} is being awarded with ${award / 100000000} LSK`);
 							l.node("transfer", { 'amount': award, 'recipientId': address }).then(defaultDisplay, logger.error);
 						}
-						
+
 					} else {
 						stringifyDisplay(votersData);
 					}
@@ -795,7 +797,7 @@ if (options.info || options.listVotes || options.listVoters || options.checkVote
 			if (options.multitransfer || options.multilsktransfer) {
 				var transfer = options.multitransfer || options.multilsktransfer;
 				if ((transfer.constructor === Array)&&(transfer.length > 0)) {
-					var value = (options.transfer)?transfer[0]*100000000:transfer[0]*1;
+					var value = (options.multitransfer)?transfer[0]*100000000:transfer[0]*1;
 					for (var n = 1; n < transfer.length; n++) {
 						var address = transfer[n];
 						console.log(`Transfering ${value/100000000} LSKs to ${address}`);
